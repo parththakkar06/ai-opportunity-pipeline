@@ -84,6 +84,18 @@ class PipelineUI:
                      f"[bold]{fmt_cost(total.cost_usd)}")
         self.console.print(cost)
 
+        stages = sorted({r.stage for r in tracker.records if r.stage is not None})
+        if stages:
+            by_stage = Table(title="Tokens by stage")
+            by_stage.add_column("Stage")
+            by_stage.add_column("Calls", justify="right")
+            by_stage.add_column("Input", justify="right")
+            by_stage.add_column("Output", justify="right")
+            for st in stages:
+                t = tracker.for_stage(st)
+                by_stage.add_row(str(st), str(t.calls), f"{t.input_tokens:,}", f"{t.output_tokens:,}")
+            self.console.print(by_stage)
+
         prototype = out_dir / "04_prototype.html"
         extra = f"\nOpen the prototype: [cyan]open \"{prototype}\"[/cyan]" if prototype.exists() else ""
         self.console.print(Panel(

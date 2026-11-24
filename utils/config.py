@@ -23,6 +23,7 @@ DEFAULT_GEMINI_MODEL = "gemini-3.8-flash"
 VALID_PROVIDERS = {"gemini", "openai", "openrouter"}
 DEFAULT_OPENROUTER_MODEL = "google/gemma-4-31b-it:free"
 DEFAULT_OPENROUTER_FALLBACKS = "google/gemma-4-31b-it:free,openrouter/free"
+DEFAULT_OPENROUTER_CHEAP_MODEL = "google/gemma-4-31b-it:free"
 # Mapped to Gemini thinking levels in utils/llm.py (max -> XHIGH).
 VALID_EFFORTS = {"minimal", "low", "medium", "high", "xhigh", "max"}
 
@@ -91,6 +92,12 @@ class Settings:
     builder_effort: str = "high"
     build_prototype: bool = True
     fallback_models: list[str] = field(default_factory=list)
+    # Phase 1 research budget
+    cheap_model: str = DEFAULT_GEMINI_MODEL          # fact extraction (and later: verifier, eval judge)
+    max_docs: int = 6                                # full pages/PDFs read per run
+    research_time_budget_s: float = 120.0            # search + fetch + gap round
+    gap_round: bool = True
+    refresh_cache: bool = False
     tavily_api_key: str | None = None
     serper_api_key: str | None = None
     search_results_per_query: int = 5
@@ -110,9 +117,11 @@ def load_settings(provider_override: str | None = None) -> Settings:
     if provider == "gemini":
         model = _env("GEMINI_MODEL", DEFAULT_GEMINI_MODEL)
         builder_model = _env("GEMINI_BUILDER_MODEL", model)
+        cheap_model = _env("GEMINI_CHEAP_MODEL", builder_model)
     elif provider == "openrouter":
         model = _env("OPENROUTER_MODEL", DEFAULT_OPENROUTER_MODEL)
         builder_model = _env("OPENROUTER_BUILDER_MODEL", model)
+        cheap_model = _env("OPENROUTER_CHEAP_MODEL", DEFAULT_OPENROUTER_CHEAP_MODEL)
         fallbacks = [m.strip() for m in _env("OPENROUTER_FALLBACK_MODELS", DEFAULT_OPENROUTER_FALLBACKS).split(",")
                      if m.strip() and m.strip() not in (model, builder_model)]
     else:
@@ -120,6 +129,7 @@ def load_settings(provider_override: str | None = None) -> Settings:
         if not model:
             raise ConfigError("LLM_PROVIDER=openai requires OPENAI_MODEL in .env (e.g. the model name you have access to).")
         builder_model = _env("OPENAI_BUILDER_MODEL", model)
+        cheap_model = _env("OPENAI_CHEAP_MODEL", model)
 
     effort = _env("LLM_EFFORT", "medium").lower()
     builder_effort = _env("BUILDER_EFFORT", "high").lower()
@@ -144,6 +154,10 @@ def load_settings(provider_override: str | None = None) -> Settings:
         builder_effort=builder_effort,
         build_prototype=_bool("BUILD_PROTOTYPE", True),
         fallback_models=fallbacks,
+        cheap_model=_env("CHEAP_MODEL", cheap_model),
+        max_docs=max(0, int(_float("MAX_DOCS", 6))),
+        research_time_budget_s=_float("RESEARCH_TIME_BUDGET_S", 120.0),
+        gap_round=_bool("GAP_ROUND", True),
         tavily_api_key=_env("TAVILY_API_KEY"),
         serper_api_key=_env("SERPER_API_KEY"),
         search_results_per_query=int(_float("SEARCH_RESULTS_PER_QUERY", 5)),

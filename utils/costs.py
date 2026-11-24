@@ -42,6 +42,7 @@ class UsageRecord:
     input_tokens: int
     output_tokens: int
     cost_usd: float | None
+    stage: int | None = None
 
 
 @dataclass
@@ -55,13 +56,14 @@ class AgentTotals:
 @dataclass
 class CostTracker:
     records: list[UsageRecord] = field(default_factory=list)
+    stage: int | None = None          # set by the orchestrator so every call is attributed to a stage
 
     def add(self, agent: str, model: str, input_tokens: int, output_tokens: int) -> UsageRecord:
         price = price_for(model)
         cost = None
         if price is not None:
             cost = (input_tokens * price[0] + output_tokens * price[1]) / 1_000_000
-        record = UsageRecord(agent, model, int(input_tokens or 0), int(output_tokens or 0), cost)
+        record = UsageRecord(agent, model, int(input_tokens or 0), int(output_tokens or 0), cost, self.stage)
         self.records.append(record)
         return record
 
@@ -79,6 +81,9 @@ class CostTracker:
 
     def for_agent(self, agent: str) -> AgentTotals:
         return self._sum([r for r in self.records if r.agent == agent])
+
+    def for_stage(self, stage: int) -> AgentTotals:
+        return self._sum([r for r in self.records if r.stage == stage])
 
     def total(self) -> AgentTotals:
         return self._sum(self.records)

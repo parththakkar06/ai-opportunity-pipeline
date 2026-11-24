@@ -250,8 +250,12 @@ def _execute(req: AnalyzeRequest, ui: PipelineUI) -> dict[str, Any]:
                     build_prototype=req.include_prototype, from_step=req.from_stage, slug=req.run_slug)
     payload = report_payload(result.out_dir)
     total = result.tracker.total()
+    stages = sorted({r.stage for r in result.tracker.records if r.stage is not None})
     payload["usage"] = {"input_tokens": total.input_tokens, "output_tokens": total.output_tokens,
-                        "cost": fmt_cost(total.cost_usd)}
+                        "cost": fmt_cost(total.cost_usd), "calls": total.calls,
+                        "stages": {str(s): {"input_tokens": result.tracker.for_stage(s).input_tokens,
+                                            "output_tokens": result.tracker.for_stage(s).output_tokens,
+                                            "calls": result.tracker.for_stage(s).calls} for s in stages}}
     return payload
 
 

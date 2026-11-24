@@ -72,7 +72,68 @@ class PublicInfoItem(BaseModel):
     source_url: Optional[str] = None
 
 
-class BusinessProfile(BaseModel):
+# ---- evidence (Phase 1: every fact has a source and a date) ----
+class ExtractedFact(BaseModel):
+    """One atomic fact as the cheap extraction model returns it."""
+    statement: str = Field(description="One self-contained factual sentence, copied or tightly paraphrased from the document")
+    metric: Optional[str] = Field(None, description=(
+        "snake_case key when the fact is a metric or a role, e.g. revenue, sales_bookings, collections, net_profit, "
+        "net_debt, land_bank, area_delivered, projects_launched, employees, managing_director, ceo, chairman"))
+    value: Optional[str] = Field(None, description="The number with unit exactly as written, e.g. '₹6,252 crore'")
+    period: Optional[str] = Field(None, description="Period the value refers to, e.g. 'Q1 FY27', 'FY26'")
+    as_of: Optional[str] = Field(None, description="ISO date (YYYY-MM-DD) the fact refers to or was stated; null if unclear")
+
+
+class LeaderStatement(BaseModel):
+    speaker: str
+    role: str
+    quote: str = Field(description="Verbatim words from the document, no paraphrasing")
+    topic: str
+    date: Optional[str] = None
+
+
+class DocFacts(BaseModel):
+    source_id: str = Field(description="Echo the source_id given for the document")
+    document_date: Optional[str] = Field(None, description="ISO date of the document itself, if stated")
+    facts: list[ExtractedFact]
+    leader_statements: list[LeaderStatement] = Field(default_factory=list)
+
+
+class FactBatch(BaseModel):
+    documents: list[DocFacts]
+
+
+class Fact(ExtractedFact):
+    """A fact with provenance, as stored in 01_business_profile.json (Python fills the ids and dates)."""
+    fact_id: str                      # "S3.F7" for documents, "R12" for search snippets
+    source_id: str
+    as_of_basis: Literal["stated", "published", "retrieved", "unknown"] = "unknown"
+    superseded_by: Optional[str] = None
+
+
+class SourceDoc(BaseModel):
+    source_id: str
+    url: str
+    title: str
+    source_type: str                  # filing | investor | rera | news | company | other | snippet
+    kind: str                         # pdf | html | snippet
+    published: Optional[str] = None
+    retrieved: Optional[str] = None
+
+
+class Leader(BaseModel):
+    name: str
+    role: str
+    evidence: list[str] = Field(description="fact_ids that name this person in this role")
+
+
+class FieldEvidence(BaseModel):
+    field: str = Field(description="Profile field path, e.g. 'scale.revenue', 'major_projects[2]', 'recent_news[0]'")
+    evidence: list[str] = Field(description="fact_ids supporting the field")
+
+
+class BusinessProfileDraft(BaseModel):
+    """What the research model writes. Provenance fields are added by Python (see BusinessProfile)."""
     business_name: str
     website: Optional[str] = None
     industry: str
@@ -94,11 +155,21 @@ class BusinessProfile(BaseModel):
     operational_bottlenecks: list[Bottleneck]
     competitors: list[str]
     brand: BrandSignals
-    leadership: list[str] = Field(default_factory=list, description="Named leaders with titles, e.g. 'Jane Doe — CEO', only if public")
+    leaders: list[Leader] = Field(default_factory=list, description="Current leaders, only from cited evidence")
+    field_evidence: list[FieldEvidence] = Field(default_factory=list, description="Evidence for every factual field")
     data_quality: Confidence = Field(description="Overall quality of available public information")
     field_confidence: list[FieldConfidence]
     assumptions: list[str] = Field(description="Every inference not directly supported by evidence")
-    sources: list[str] = Field(description="URLs actually used")
+
+
+class BusinessProfile(BusinessProfileDraft):
+    """Stored profile: the draft plus provenance computed in Python."""
+    leadership: list[str] = Field(default_factory=list, description="'Name — Role' for leaders that passed the 12-month evidence rule")
+    sources: list[str] = Field(default_factory=list, description="URLs actually used")
+    sources_index: list[SourceDoc] = Field(default_factory=list)
+    facts: list[Fact] = Field(default_factory=list)
+    leader_statements: list[dict] = Field(default_factory=list)
+    provenance_warnings: list[str] = Field(default_factory=list)
 
 
 # --------------------------------------------------------------------------- Stage 2: Challenge & Reasoning Analyst
@@ -369,3 +440,6 @@ class RunMeta(BaseModel):
     total_output_tokens: int = 0
     total_cost_usd: Optional[float] = None
     search_providers_used: list[str] = Field(default_factory=list)
+    elapsed_seconds: Optional[float] = None
+    stages: dict[str, dict] = Field(default_factory=dict)      # "1": {input, output, calls, seconds}
+    research: dict = Field(default_factory=dict)               # pages fetched, facts, gap round, cache hits

@@ -58,6 +58,7 @@ def run_pipeline(
     ui: PipelineUI | None = None,
     build_prototype: bool | None = None,
     slug: str | None = None,
+    refresh: bool = False,
 ) -> PipelineResult:
     """Run the pipeline. Every dependency can be injected, which is how the offline test works."""
     if not business_name.strip():
@@ -69,6 +70,8 @@ def run_pipeline(
     settings = settings or load_settings(provider)
     if build_prototype is not None:
         settings.build_prototype = build_prototype
+    if refresh:
+        settings.refresh_cache = True
     tracker = llm.tracker if llm else CostTracker()
     llm = llm or build_llm(settings, tracker)
     llm.notify = ui.note          # e.g. "model X busy; switching to Y" shows up in the CLI and the web tracker
@@ -105,6 +108,7 @@ def run_pipeline(
             ui.skipped(stage, stage_title)
             continue
         ui.stage_start(stage, stage_title)
+        tracker.stage = stage
         stage_t0 = time.perf_counter()
         for agent_cls in agent_classes:
             agent = agent_cls(ctx)
@@ -114,13 +118,20 @@ def run_pipeline(
                 files = agent.run()
             ui.agent_done(agent.title, time.perf_counter() - t0, tracker.for_agent(agent.key), files)
             result.files.extend(files)
-        ui.stage_done(stage, stage_title, time.perf_counter() - stage_t0)
+        stage_seconds = time.perf_counter() - stage_t0
+        ui.stage_done(stage, stage_title, stage_seconds)
+        st = tracker.for_stage(stage)
+        meta.stages[str(stage)] = {"title": stage_title, "input_tokens": st.input_tokens,
+                                   "output_tokens": st.output_tokens, "calls": st.calls,
+                                   "seconds": round(stage_seconds, 1)}
 
     total = tracker.total()
     meta.finished_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     meta.total_input_tokens, meta.total_output_tokens = total.input_tokens, total.output_tokens
     meta.total_cost_usd = round(total.cost_usd, 4) if total.cost_usd is not None else None
     meta.search_providers_used = ctx.search_providers_used
+    meta.elapsed_seconds = round(time.perf_counter() - started, 1)
+    meta.research = ctx.research_stats
     result.files.append(write_json(out_dir / META_JSON, meta))
     result.files.extend(write_report(out_dir))   # the 5-section assessment report
 
@@ -137,6 +148,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--from-step", type=int, default=1, choices=[1, 2, 3, 4],
                    help="Resume from this stage, reusing saved outputs of earlier stages")
     p.add_argument("--no-prototype", action="store_true", help="Skip the HTML prototype in stage 4 (faster)")
+    p.add_argument("--refresh", action="store_true", help="Ignore the research cache and fetch everything again")
     p.add_argument("--provider", choices=["gemini", "openai", "openrouter"], help="Override LLM_PROVIDER from .env")
     p.add_argument("--outputs-dir", type=Path, help="Where to write outputs (default: ./outputs)")
     return p.parse_args(argv)
@@ -148,7 +160,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         run_pipeline(args.business, url=args.url, context=args.context, from_step=args.from_step,
                      provider=args.provider, outputs_root=args.outputs_dir, ui=ui,
-                     build_prototype=False if args.no_prototype else None)
+                     build_prototype=False if args.no_prototype else None, refresh=args.refresh)
         return 0
     except (ConfigError, PipelineError, HandoffError, LLMError) as exc:
         ui.error(str(exc))
