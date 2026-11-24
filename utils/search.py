@@ -219,6 +219,7 @@ class WebResearch:
         self.results_per_query = results_per_query
         self.max_queries = max_queries
         self.time_budget_s = time_budget_s
+        self.tavily_client = None      # set when a Tavily key exists; used as a fetch fallback
 
     @classmethod
     def from_settings(cls, settings: Settings) -> "WebResearch":
@@ -229,14 +230,18 @@ class WebResearch:
             providers.append(SerperSearch(settings.serper_api_key))
         providers.append(DuckDuckGoSearch())
         keyless = len(providers) == 1
-        return cls(providers, settings.search_results_per_query,
-                   max_queries=DDG_MAX_QUERIES if keyless else None)
+        research = cls(providers, settings.search_results_per_query,
+                       max_queries=DDG_MAX_QUERIES if keyless else None)
+        if settings.tavily_api_key:
+            research.tavily_client = providers[0].client
+        return research
 
     @property
     def provider_names(self) -> list[str]:
         return [p.name for p in self.providers]
 
-    def search_many(self, queries: list[Query]) -> ResearchBundle:
+    def search_many(self, queries: list[Query], cache=None) -> ResearchBundle:
+        """Run queries through the provider chain. With a DiskCache, repeated queries cost nothing."""
         bundle = ResearchBundle()
         seen: set[str] = set()
         failures: dict[str, int] = {}
@@ -249,6 +254,18 @@ class WebResearch:
                 bundle.errors.append(f"search time budget ({self.time_budget_s:.0f}s) reached; "
                                      "continuing with the results gathered so far")
                 break
+            cache_key = f"{q.topic}|{q.text}"
+            cached = cache.get("search", cache_key) if cache is not None else None
+            if cached is not None:
+                for item in cached.get("results", []):
+                    r = SearchResult(**item)
+                    key = r.url.rstrip("/").lower()
+                    if r.url and key not in seen:
+                        seen.add(key)
+                        bundle.results.append(r)
+                if cached.get("provider") and cached["provider"] not in bundle.providers_used:
+                    bundle.providers_used.append(cached["provider"])
+                continue
             for provider in self.providers:
                 if provider.name in disabled:
                     continue
@@ -267,6 +284,9 @@ class WebResearch:
                     continue
                 if provider.name not in bundle.providers_used:
                     bundle.providers_used.append(provider.name)
+                if cache is not None:
+                    cache.set("search", cache_key, {"provider": provider.name,
+                                                    "results": [r.__dict__ for r in results]})
                 for r in results:
                     key = r.url.rstrip("/").lower()
                     if r.url and key not in seen:
@@ -274,6 +294,12 @@ class WebResearch:
                         bundle.results.append(r)
                 break
         return bundle
+
+    def fetch_document(self, url: str, timeout: float = 12.0):
+        """Full text of a page or PDF (utils.fetch). Tests override this with fixtures."""
+        from utils.fetch import fetch_document
+
+        return fetch_document(url, timeout=timeout, tavily_client=self.tavily_client)
 
     def fetch_homepage(self, url: str) -> HomepageSignals | None:
         url = normalize_url(url)
