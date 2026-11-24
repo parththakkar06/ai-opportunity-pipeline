@@ -1,0 +1,16 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Maple Street Dental · No-show AI</title></head>
+<body class="bg-slate-50">
+  <nav><button data-tab="dash">Dashboard</button><button data-tab="ai">AI Engine</button><button data-tab="insights">Insights</button></nav>
+  <main id="panel"></main>
+  <script>
+    const appts = [{patient: "Ava R.", time: "9:00", risk: 0.72}];
+    document.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click", () => {
+      document.getElementById("panel").textContent = b.dataset.tab;
+    }));
+  </script>
+</body>
+</html>
+```

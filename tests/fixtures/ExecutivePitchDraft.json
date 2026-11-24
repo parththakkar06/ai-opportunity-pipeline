@@ -1,0 +1,73 @@
+{
+  "recipient_role": "Founder & CEO",
+  "email_subject": "Filling Maple Street's empty hygiene chairs",
+  "email_body": "Hi Dr. Patel,\n\nCongrats on the Round Rock opening. A few reviews mention waiting weeks to rebook, which usually means chairs sit empty after late cancellations.\n\nWe built a model that flags likely no-shows from your booking history and auto-offers those slots to waitlisted patients. Practices your size typically recover 25-35% of lost hygiene visits.\n\nWorth a 20-minute look at a working prototype?\n\n[Your Name]",
+  "elevator_pitch": "Every empty hygiene chair costs Maple Street about $180. We predict which appointments will no-show and backfill them automatically from your waitlist, using data you already have.",
+  "roi_assumptions": [
+    {
+      "label": "No-shows per month",
+      "value": "100",
+      "source": "assumption"
+    },
+    {
+      "label": "Average hygiene visit value",
+      "value": "$180",
+      "source": "industry benchmark"
+    }
+  ],
+  "roi_line_items": [
+    {
+      "item": "Recovered hygiene visits",
+      "calculation": "100/mo x 30% x $180 x 12",
+      "annual_value_usd_low": 50000,
+      "annual_value_usd_high": 65000
+    },
+    {
+      "item": "Front-desk time saved",
+      "calculation": "6 h/wk x $24 x 52",
+      "annual_value_usd_low": 5000,
+      "annual_value_usd_high": 7500
+    }
+  ],
+  "implementation_cost_usd_low": 15000,
+  "implementation_cost_usd_high": 25000,
+  "annual_running_cost_usd": 6000,
+  "caveats": [
+    "No-show volume is estimated"
+  ],
+  "next_step_cta": "Run a 4-week pilot at Round Rock measuring no-show rate.",
+  "addressed_to": "Dr. Priya Patel, Founder & CEO",
+  "ceo_pitch_title": "Filling Maple Street's empty chairs with AI",
+  "why_we_reached_out": "Congratulations on opening Round Rock in April. Reviews mention weeks-long waits to rebook, which usually means chairs sit empty after late cancellations, a gap that doubles with two clinics.",
+  "opportunities_identified": [
+    {
+      "title": "Recover no-show revenue",
+      "evidence": "~100 missed hygiene visits a month across 14 chairs"
+    },
+    {
+      "title": "Answer every call",
+      "evidence": "Reviews cite unanswered phones at peak hours"
+    },
+    {
+      "title": "Convert pending Invisalign plans",
+      "evidence": "Invisalign is a core high-ticket service"
+    }
+  ],
+  "recommended_solutions": [
+    {
+      "name": "No-show prediction & waitlist backfill",
+      "what_it_does": "Scores each appointment's no-show risk and auto-offers risky slots to waitlisted patients.",
+      "maps_to": "Hygiene schedule at both clinics",
+      "expected_impact": "Recover ~30% of lost visits",
+      "timeline": "4-week pilot at Round Rock"
+    },
+    {
+      "name": "After-hours voice receptionist",
+      "what_it_does": "Answers calls and books directly into the schedule.",
+      "maps_to": "Inbound calls",
+      "expected_impact": "~40 extra bookings a month",
+      "timeline": "5 weeks"
+    }
+  ],
+  "closing": "Could we walk you through a working prototype on a 30-minute call next week?"
+}

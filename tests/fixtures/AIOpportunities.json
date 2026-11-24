@@ -1,0 +1,157 @@
+{
+  "business_name": "Maple Street Dental",
+  "opportunities": [
+    {
+      "id": "opp-1",
+      "title": "No-show prediction & smart waitlist backfill",
+      "category": "revenue_growth",
+      "problem_solved": "Empty hygiene chairs from late cancellations",
+      "ai_mechanism": "Gradient-boosted model scores each appointment's no-show risk from history; high-risk slots trigger SMS confirmations and auto-offer to waitlist patients.",
+      "why_this_business": "Two locations and reviews citing slow rebooking",
+      "estimated_effort": {
+        "level": "medium",
+        "timeline_weeks": 6,
+        "team": "1 engineer + booking API"
+      },
+      "estimated_impact": {
+        "summary": "Recover 30% of lost slots",
+        "primary_metric": "Chair utilization",
+        "annual_value_usd_low": 60000,
+        "annual_value_usd_high": 110000,
+        "basis": "~100 no-shows/mo x 30% x $180"
+      },
+      "required_data": [
+        "2 years of appointment history"
+      ],
+      "risks": [
+        "Booking system API limits"
+      ],
+      "addresses_challenges": [
+        "ch-1"
+      ],
+      "applies_to": "Hygiene schedule at both clinics"
+    },
+    {
+      "id": "opp-2",
+      "title": "AI insurance benefits verification",
+      "category": "cost_reduction",
+      "problem_solved": "Front-desk hours spent on payer phone calls",
+      "ai_mechanism": "LLM agent pulls eligibility via clearinghouse API and summarizes coverage into the chart.",
+      "why_this_business": "PPO-heavy patient base",
+      "estimated_effort": {
+        "level": "medium",
+        "timeline_weeks": 8,
+        "team": "1 engineer + clearinghouse"
+      },
+      "estimated_impact": {
+        "summary": "Save 25 staff hours/week",
+        "primary_metric": "Verification time",
+        "annual_value_usd_low": 30000,
+        "annual_value_usd_high": 45000,
+        "basis": "25 h x $24 x 52"
+      },
+      "required_data": [
+        "Payer list",
+        "Clearinghouse access"
+      ],
+      "risks": [
+        "Payer data gaps"
+      ],
+      "addresses_challenges": [
+        "ch-4"
+      ],
+      "applies_to": "Front-desk insurance checks before every visit"
+    },
+    {
+      "id": "opp-3",
+      "title": "After-hours voice receptionist that books into the PMS",
+      "category": "customer_experience",
+      "problem_solved": "Missed calls at peak hours",
+      "ai_mechanism": "Speech-to-text + LLM with tool calls into the scheduling system; escalates emergencies to on-call dentist.",
+      "why_this_business": "Reviews complain about unanswered phones",
+      "estimated_effort": {
+        "level": "medium",
+        "timeline_weeks": 5,
+        "team": "Vendor + 1 engineer"
+      },
+      "estimated_impact": {
+        "summary": "Capture 40 extra bookings/month",
+        "primary_metric": "Call answer rate",
+        "annual_value_usd_low": 40000,
+        "annual_value_usd_high": 80000,
+        "basis": "40 x $150 x 12"
+      },
+      "required_data": [
+        "Call logs",
+        "Schedule templates"
+      ],
+      "risks": [
+        "Patient trust in AI voice"
+      ],
+      "addresses_challenges": [
+        "ch-3"
+      ],
+      "applies_to": "Inbound calls to both clinics, evenings and peaks"
+    },
+    {
+      "id": "opp-4",
+      "title": "Clinical note drafting from voice",
+      "category": "internal_automation",
+      "problem_solved": "Dentists spend evenings on charting",
+      "ai_mechanism": "Ambient transcription drafts SOAP notes for dentist approval.",
+      "why_this_business": "Growing provider headcount after expansion",
+      "estimated_effort": {
+        "level": "high",
+        "timeline_weeks": 10,
+        "team": "Vendor + compliance review"
+      },
+      "estimated_impact": {
+        "summary": "Save 5 h/week per dentist",
+        "primary_metric": "Charting time",
+        "annual_value_usd_low": 25000,
+        "annual_value_usd_high": 50000,
+        "basis": "4 dentists x 5 h x $120 x 52 x 50%"
+      },
+      "required_data": [
+        "Note templates"
+      ],
+      "risks": [
+        "HIPAA compliance"
+      ],
+      "addresses_challenges": [
+        "ch-4"
+      ],
+      "applies_to": "Dentist charting after each exam"
+    },
+    {
+      "id": "opp-5",
+      "title": "Treatment-plan follow-up nudges",
+      "category": "revenue_growth",
+      "problem_solved": "Unscheduled accepted treatment (e.g. Invisalign consults)",
+      "ai_mechanism": "LLM writes personalized follow-ups from treatment plans; sends via SMS/email at optimal times.",
+      "why_this_business": "Invisalign is a core high-ticket service",
+      "estimated_effort": {
+        "level": "low",
+        "timeline_weeks": 3,
+        "team": "1 engineer"
+      },
+      "estimated_impact": {
+        "summary": "Convert 8% more pending plans",
+        "primary_metric": "Case acceptance",
+        "annual_value_usd_low": 35000,
+        "annual_value_usd_high": 70000,
+        "basis": "Pending plans x 8% x avg ticket"
+      },
+      "required_data": [
+        "Treatment plan exports"
+      ],
+      "risks": [
+        "Message fatigue"
+      ],
+      "addresses_challenges": [
+        "ch-2"
+      ],
+      "applies_to": "Pending Invisalign and restorative plans"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "headline": "Fill empty hygiene chairs with no-show prediction and automatic waitlist backfill.",
+  "executive_summary": "Missed hygiene appointments are the largest controllable revenue leak at Maple Street Dental.\n\nA risk model on existing booking history flags likely no-shows and backfills from a waitlist automatically.",
+  "why_it_wins": ["Highest ROI score (9/10)", "Uses data the practice already has"],
+  "why_not_the_others": [
+    {"opportunity_id": "opp-5", "reason": "Fast but smaller upside"},
+    {"opportunity_id": "opp-3", "reason": "Easily copied by competitors"},
+    {"opportunity_id": "opp-2", "reason": "Integration heavy for labor savings only"},
+    {"opportunity_id": "opp-4", "reason": "Compliance burden and slow rollout"}
+  ],
+  "implementation_phases": [
+    {"name": "Pilot at Round Rock", "duration_weeks": 4, "deliverables": ["Risk model", "SMS confirmations"]},
+    {"name": "Rollout", "duration_weeks": 4, "deliverables": ["Waitlist backfill", "Dashboard"]}
+  ],
+  "success_metrics": ["No-show rate from 12% to 8%", "Chair utilization +6 pts"],
+  "risks_and_mitigations": [{"risk": "Booking API limits", "mitigation": "Nightly export fallback"}]
+}

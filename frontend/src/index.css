@@ -1,0 +1,337 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens: design-system/ai-opportunity-studio/MASTER.md (UI/UX Pro Max, "Trust & Authority",
+ * "Accessible & Ethical"). Components use only these semantic names, never raw hex values or the slate,
+ * indigo, etc. palettes. The light values come from the design system. The skill gave no dark values,
+ * so the dark theme below is my own, with every text pair checked for at least 4.5:1 contrast.
+ */
+
+/* Dark mode follows data-theme on <html>, which index.html sets from the saved choice or the system. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Surfaces & text */
+  --color-background: #f8fafc;
+  --color-foreground: #020617;
+  --color-card: #ffffff;
+  --color-card-foreground: #020617;
+  --color-subtle: #f1f5f9;
+  --color-muted: #e8ecf1;
+  --color-muted-foreground: #475569;
+  --color-secondary: #334155;
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+
+  /* Primary (navy) for headings, the active tab, and strong surfaces */
+  --color-primary: #0f172a;
+  --color-on-primary: #ffffff;
+
+  /* The single accent (trust blue): CTAs, links, the active stage */
+  --color-accent: #0369a1;
+  --color-accent-hover: #075985;
+  --color-on-accent: #ffffff;
+  --color-accent-soft: #e0f2fe;
+  --color-accent-soft-foreground: #075985;
+
+  --color-ring: #0f172a;
+
+  /* Status colors, always paired with an icon or text label, never color alone */
+  --color-success: #047857;
+  --color-success-soft: #ecfdf5;
+  --color-success-foreground: #065f46;
+  --color-warning: #b45309;
+  --color-warning-soft: #fffbeb;
+  --color-warning-foreground: #92400e;
+  --color-danger: #dc2626;
+  --color-danger-soft: #fef2f2;
+  --color-danger-foreground: #b91c1c;
+
+  /* Motion tokens (shared rhythm; exits are about 65% of entries) */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-soft: cubic-bezier(0.64, 0, 0.78, 0);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-background: #020617;
+  --color-foreground: #f8fafc;
+  --color-card: #0f172a;
+  --color-card-foreground: #f8fafc;
+  --color-subtle: #111c31;
+  --color-muted: #1e293b;
+  --color-muted-foreground: #a3b1c6;
+  --color-secondary: #cbd5e1;
+  --color-border: #1e293b;
+  --color-border-strong: #334155;
+
+  --color-primary: #e2e8f0;
+  --color-on-primary: #0f172a;
+
+  --color-accent: #38bdf8;
+  --color-accent-hover: #7dd3fc;
+  --color-on-accent: #082f49;
+  --color-accent-soft: #0c2a43;
+  --color-accent-soft-foreground: #bae6fd;
+
+  --color-ring: #7dd3fc;
+
+  --color-success: #34d399;
+  --color-success-soft: #062b23;
+  --color-success-foreground: #6ee7b7;
+  --color-warning: #fbbf24;
+  --color-warning-soft: #2e1a04;
+  --color-warning-foreground: #fcd34d;
+  --color-danger: #f87171;
+  --color-danger-soft: #2f0b0b;
+  --color-danger-foreground: #fca5a5;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+}
+
+/* The sticky top bar (64px) plus the report tab bar must never cover an element that receives focus. */
+html {
+  scroll-padding-top: 9rem;
+}
+
+a,
+button,
+summary,
+input,
+select,
+label,
+[role="tab"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+/* One visible focus style everywhere (3px, never removed). Mouse clicks don't trigger it. */
+:focus-visible {
+  outline: 3px solid var(--color-ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+/* Headings and regions that only receive focus from code (tabindex="-1") don't need a ring. */
+[tabindex="-1"]:focus,
+[tabindex="-1"]:focus-visible {
+  outline: none;
+}
+
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+[role="tab"],
+summary,
+label:has(input[type="checkbox"]) {
+  cursor: pointer;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -100px;
+  z-index: 50;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 600;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* framer-motion honours reduced motion through MotionConfig; this covers CSS transitions and spinners. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ------------------------------------------------------------------------------------------- print / PDF
+ * Printing (or "Save as PDF") produces a clean document: no app chrome, light theme regardless of the
+ * on-screen theme, A4 margins, and sections that never split across pages. On the CEO Pitch tab only
+ * the one-page pitch prints (plus the outreach kit if "Include email & elevator pitch" is ticked).
+ */
+@page {
+  size: A4;
+  margin: 12mm 15mm 12mm;
+}
+
+@media print {
+  :root,
+  [data-theme="dark"] {
+    color-scheme: light;
+    --color-background: #ffffff;
+    --color-foreground: #000000;
+    --color-card: #ffffff;
+    --color-card-foreground: #000000;
+    --color-subtle: #f4f6f8;
+    --color-muted: #e8ecf1;
+    --color-muted-foreground: #3f4a5a;
+    --color-secondary: #1e293b;
+    --color-border: #d7dde5;
+    --color-border-strong: #b8c2cf;
+    --color-primary: #0f172a;
+    --color-on-primary: #ffffff;
+    --color-accent: #0369a1;
+    --color-on-accent: #ffffff;
+    --color-accent-soft: #eef7fd;
+    --color-accent-soft-foreground: #075985;
+    --color-success: #047857;
+    --color-success-soft: #f0fbf6;
+    --color-success-foreground: #065f46;
+    --color-warning-soft: #fffbeb;
+    --color-warning-foreground: #92400e;
+    --color-danger-soft: #fef2f2;
+    --color-danger-foreground: #b91c1c;
+  }
+
+  html {
+    scroll-padding-top: 0;
+  }
+  html,
+  body {
+    background: #fff !important;
+    color: #000;
+    font-size: 10.5pt;
+  }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  .no-print,
+  .skip-link {
+    display: none !important;
+  }
+  /* 100vh wrappers equal a full page in print and push a blank page onto the end. */
+  .min-h-screen {
+    min-height: 0 !important;
+  }
+  .print-reset {
+    display: block !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  /* framer-motion may have left a mid-animation inline style; printed content is always fully visible. */
+  [style*="opacity"] {
+    opacity: 1 !important;
+  }
+  [style*="transform"] {
+    transform: none !important;
+  }
+
+  /* On the pitch tab, the pitch page is the whole document. */
+  [data-print-mode="pitch"] .print-hide-on-pitch {
+    display: none !important;
+  }
+  [data-print-mode="pitch"]:not([data-print-kit="true"]) .print-kit {
+    display: none !important;
+  }
+  .print-kit {
+    break-before: page;
+  }
+  #ceo-pitch-page {
+    max-width: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  /* Compact typography so the pitch fits one A4 page; only individual items avoid breaking. */
+  #ceo-pitch-page .text-base {
+    font-size: 9.5pt !important;
+    line-height: 1.36 !important;
+  }
+  #ceo-pitch-page .text-sm {
+    font-size: 8.5pt !important;
+    line-height: 1.35 !important;
+  }
+  #ceo-pitch-page h2 {
+    font-size: 17pt !important;
+    line-height: 1.15 !important;
+    margin-top: 2pt !important;
+  }
+  #ceo-pitch-page section {
+    margin-top: 9pt !important;
+    break-inside: auto;
+  }
+  #ceo-pitch-page section > div {
+    margin-top: 5pt !important;
+  }
+  #ceo-pitch-page ol > li + li,
+  #ceo-pitch-page ul > li + li {
+    margin-top: 4pt !important;
+  }
+  #ceo-pitch-page dl {
+    margin-top: 2pt !important;
+  }
+  #ceo-pitch-page .mt-1 {
+    margin-top: 1pt !important;
+  }
+  #ceo-pitch-page .mt-8,
+  #ceo-pitch-page .mt-6,
+  #ceo-pitch-page .mt-10 {
+    margin-top: 9pt !important;
+  }
+  #ceo-pitch-page .p-4 {
+    padding: 6pt 9pt !important;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    break-after: avoid;
+  }
+  /* Keep small blocks whole; long cards may flow across pages instead of leaving large gaps. */
+  .rounded-xl,
+  tr,
+  #ceo-pitch-page li,
+  #ceo-pitch-page > p {
+    break-inside: avoid;
+  }
+  a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+  details > :not(summary) {
+    display: block !important;
+  }
+}

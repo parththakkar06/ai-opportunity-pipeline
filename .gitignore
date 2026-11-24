@@ -1,0 +1,14 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+outputs/*
+!outputs/.gitkeep
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Research cache (fetched pages, fact lists, search results)
+.cache/

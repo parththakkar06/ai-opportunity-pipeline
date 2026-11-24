@@ -1,0 +1,75 @@
+{
+  "business_name": "Maple Street Dental",
+  "challenges": [
+    {
+      "id": "ch-1",
+      "category": "operational",
+      "title": "Hygiene chair no-shows",
+      "description": "Late cancellations leave hygiene chairs empty several times a day.",
+      "reasoning": "Reviews mention waiting weeks to rebook, which signals a full schedule with poor backfill; with a new six-chair clinic opened in April, unfilled slots now multiply across two locations, so lost visits are likely material.",
+      "signals": [
+        "Reviews: long waits to rebook",
+        "Second location opened 2026-04"
+      ],
+      "business_impact": "~100 lost visits/month at ~$180 each",
+      "severity": "high",
+      "confidence": "medium"
+    },
+    {
+      "id": "ch-2",
+      "category": "sales",
+      "title": "Unconverted treatment plans",
+      "description": "Accepted Invisalign plans are not scheduled promptly.",
+      "reasoning": "Invisalign is a core high-ticket service, yet the site has no follow-up tooling and the front desk is stretched by phone volume, so pending plans likely go cold before patients book the first appointment.",
+      "signals": [
+        "Invisalign listed as a core service",
+        "No marketing automation detected"
+      ],
+      "business_impact": "Lost high-ticket revenue",
+      "severity": "medium",
+      "confidence": "medium"
+    },
+    {
+      "id": "ch-3",
+      "category": "customer_experience",
+      "title": "Unanswered calls at peak hours",
+      "description": "Patients cannot reach the front desk during busy periods.",
+      "reasoning": "Several reviews explicitly say the phone was not answered, and the same small front-desk team now covers two clinics plus insurance verification calls, so peak-hour call abandonment is the most likely cause of those reviews.",
+      "signals": [
+        "Reviews: phone not answered",
+        "Front desk also verifies insurance by phone"
+      ],
+      "business_impact": "Missed new-patient bookings and lower ratings",
+      "severity": "high",
+      "confidence": "high"
+    },
+    {
+      "id": "ch-4",
+      "category": "operational",
+      "title": "Manual insurance verification",
+      "description": "Staff verify benefits by phone for each visit.",
+      "reasoning": "The practice is in-network with 12 PPO plans and is inferred from industry norms to verify benefits manually by phone, which consumes front-desk hours that are already short because of the call volume described in reviews.",
+      "signals": [
+        "12 PPO networks",
+        "inferred from industry norms"
+      ],
+      "business_impact": "~25 staff hours per week",
+      "severity": "medium",
+      "confidence": "low"
+    },
+    {
+      "id": "ch-5",
+      "category": "sales",
+      "title": "Thin referral engine",
+      "description": "No structured referral or review-request program.",
+      "reasoning": "Growth depends on local reputation as the practice expands into Cedar Park, yet no review or referral tooling appears in the tech stack, which suggests happy patients are not systematically asked to refer or review.",
+      "signals": [
+        "No review tooling detected",
+        "Cedar Park expansion planned"
+      ],
+      "business_impact": "Slower ramp-up of new locations",
+      "severity": "low",
+      "confidence": "low"
+    }
+  ]
+}

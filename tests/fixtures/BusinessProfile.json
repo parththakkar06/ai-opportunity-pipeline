@@ -1,0 +1,127 @@
+{
+  "business_name": "Maple Street Dental",
+  "website": "https://maplestreetdental.example",
+  "industry": "Healthcare",
+  "sub_industry": "General & family dentistry",
+  "headquarters": "Austin, TX",
+  "company_size_estimate": "15-25 employees, 2 locations",
+  "business_model": "B2C local service",
+  "description": "A two-location family dental practice offering preventive, cosmetic and emergency care.",
+  "core_products_services": [
+    {
+      "name": "Preventive cleanings & exams",
+      "description": "Twice-yearly hygiene visits for adults and kids"
+    },
+    {
+      "name": "Invisalign",
+      "description": "Clear aligner orthodontics"
+    },
+    {
+      "name": "Emergency dentistry",
+      "description": "Same-day appointments for pain and trauma"
+    }
+  ],
+  "target_audience": [
+    "Families in north Austin",
+    "Young professionals",
+    "PPO-insured patients"
+  ],
+  "pricing_model": "Insurance-billed; new-patient special $99 exam + X-rays",
+  "tech_stack_signals": [
+    "WordPress",
+    "Google Analytics / GTM",
+    "Online booking widget"
+  ],
+  "recent_news": [
+    {
+      "headline": "Opens second location in Round Rock",
+      "date": "2026-04",
+      "summary": "Expanded to a 6-chair office.",
+      "source_url": "https://news.example/maple"
+    }
+  ],
+  "operational_bottlenecks": [
+    {
+      "area": "No-shows",
+      "description": "Missed hygiene appointments leave chairs empty",
+      "evidence": "Reviews mention long waits to rebook",
+      "confidence": "medium"
+    },
+    {
+      "area": "Insurance verification",
+      "description": "Front desk manually verifies benefits by phone",
+      "evidence": "inferred from industry norms",
+      "confidence": "medium"
+    },
+    {
+      "area": "Phone volume",
+      "description": "Missed calls during peak hours",
+      "evidence": "Reviews mention phone not answered",
+      "confidence": "high"
+    }
+  ],
+  "competitors": [
+    "Bright Smile Austin",
+    "Domain Family Dental"
+  ],
+  "brand": {
+    "primary_color_hex": "#0F766E",
+    "secondary_color_hex": "#F59E0B",
+    "tone_of_voice": "warm, reassuring, family-friendly",
+    "tagline": "Gentle care for every smile"
+  },
+  "data_quality": "medium",
+  "field_confidence": [
+    {
+      "field": "industry",
+      "confidence": "high",
+      "note": "Clear from homepage"
+    },
+    {
+      "field": "pricing_model",
+      "confidence": "medium",
+      "note": "Only the new-patient special is public"
+    }
+  ],
+  "assumptions": [
+    "Patient volume estimated from chair count"
+  ],
+  "sources": [
+    "https://maplestreetdental.example",
+    "https://news.example/maple"
+  ],
+  "scale": {
+    "revenue": "FY25 revenue ~$9M (estimated)",
+    "projects_or_portfolio": "2 clinics, 14 chairs",
+    "employees": "22",
+    "other_metrics": [
+      "~6,500 active patients"
+    ]
+  },
+  "geographic_presence": [
+    "Austin, TX",
+    "Round Rock, TX"
+  ],
+  "major_projects": [
+    {
+      "name": "Round Rock clinic",
+      "location": "Round Rock, TX",
+      "segment": "new location",
+      "status": "opened 2026-04",
+      "details": "6 chairs"
+    }
+  ],
+  "expansion_plans": [
+    "Third location in Cedar Park planned for 2027"
+  ],
+  "public_information": [
+    {
+      "category": "partnership",
+      "detail": "In-network with 12 PPO plans",
+      "source_url": null
+    }
+  ],
+  "leadership": [
+    "Dr. Priya Patel \u2014 Founder & CEO"
+  ]
+}

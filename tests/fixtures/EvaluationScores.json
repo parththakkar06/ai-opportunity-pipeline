@@ -1,0 +1,9 @@
+{
+  "scores": [
+    {"opportunity_id": "opp-1", "feasibility": {"score": 8, "rationale": "Booking data exists"}, "speed_to_value": {"score": 8, "rationale": "Pilot in 6 weeks"}, "roi_potential": {"score": 9, "rationale": "Directly fills chairs"}, "competitive_moat": {"score": 6, "rationale": "Uses own history"}, "biggest_risk": "API access"},
+    {"opportunity_id": "opp-2", "feasibility": {"score": 6, "rationale": "Clearinghouse needed"}, "speed_to_value": {"score": 5, "rationale": "Integration heavy"}, "roi_potential": {"score": 6, "rationale": "Labor savings only"}, "competitive_moat": {"score": 3, "rationale": "Commodity"}, "biggest_risk": "Payer gaps"},
+    {"opportunity_id": "opp-3", "feasibility": {"score": 7, "rationale": "Vendors exist"}, "speed_to_value": {"score": 8, "rationale": "Fast to deploy"}, "roi_potential": {"score": 7, "rationale": "Captures missed calls"}, "competitive_moat": {"score": 4, "rationale": "Easily copied"}, "biggest_risk": "Patient trust"},
+    {"opportunity_id": "opp-4", "feasibility": {"score": 5, "rationale": "Compliance burden"}, "speed_to_value": {"score": 4, "rationale": "Long rollout"}, "roi_potential": {"score": 5, "rationale": "Soft savings"}, "competitive_moat": {"score": 3, "rationale": "Vendor product"}, "biggest_risk": "HIPAA"},
+    {"opportunity_id": "opp-5", "feasibility": {"score": 9, "rationale": "Simple"}, "speed_to_value": {"score": 9, "rationale": "3 weeks"}, "roi_potential": {"score": 7, "rationale": "High-ticket cases"}, "competitive_moat": {"score": 5, "rationale": "Some personalization"}, "biggest_risk": "Message fatigue"}
+  ]
+}
