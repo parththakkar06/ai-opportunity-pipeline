@@ -65,7 +65,21 @@ export function CeoPitchSection({ report, entrance, onPrint, onCopy, copied, inc
           </p>
 
           <PitchBlock letter="A" title="Why we reached out">
+            {p.opening ? (
+              <p className="mb-3 text-base leading-relaxed text-foreground">
+                {p.opening.text}{' '}
+                <span className="font-mono text-xs text-muted-foreground" title="Source id in the research evidence">
+                  [{p.opening.source_id}]
+                </span>
+              </p>
+            ) : null}
             <p className="text-base leading-relaxed text-secondary">{p.why_we_reached_out}</p>
+            {!p.ceo_statements_found ? (
+              <p className="mt-3 text-sm text-muted-foreground italic">
+                No CEO statements found in the sources read
+                {p.opening ? '; the pitch opens on the newest cited fact.' : '.'}
+              </p>
+            ) : null}
           </PitchBlock>
 
           <PitchBlock letter="B" title="Opportunities we identified">

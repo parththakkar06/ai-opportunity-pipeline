@@ -111,9 +111,20 @@ export interface RecommendedSolution {
   timeline: string
 }
 
+export interface PitchOpening {
+  kind: 'stated_priority' | 'newest_fact'
+  text: string
+  source_id: string
+  quote: string | null
+  speaker: string | null
+  date: string | null
+}
+
 export interface CEOPitch {
   addressed_to: string
   title: string
+  opening?: PitchOpening | null
+  ceo_statements_found?: boolean
   why_we_reached_out: string
   opportunities_identified: OpportunityHighlight[]
   recommended_solutions: RecommendedSolution[]
