@@ -9,8 +9,11 @@ from agents.base import (
     profile_for_prompt,
     CHALLENGES_JSON, PITCH_JSON, PITCH_MD, PROFILE_JSON, PROTOTYPE_HTML, STRATEGY_JSON, Agent, as_json,
 )
+from agents.ceo_voice import invented_quotes, pitch_opening
 from utils.io import cell, read_model, write_json, write_text
-from utils.schemas import BusinessChallenges, BusinessProfile, ExecutivePitchDraft, ROISummary, WinningStrategy
+from utils.schemas import (
+    BusinessChallenges, BusinessProfile, ExecutivePitchDraft, PitchOpening, ROISummary, WinningStrategy,
+)
 
 TAILWIND_TAG = '<script src="https://cdn.tailwindcss.com"></script>'
 
@@ -47,7 +50,7 @@ def _usd(x: float) -> str:
 
 
 def render_pitch_markdown(draft: ExecutivePitchDraft, roi: ROISummary, strategy: WinningStrategy,
-                          profile: BusinessProfile) -> str:
+                          profile: BusinessProfile, opening: PitchOpening | None = None) -> str:
     def months(x: float | None) -> str:
         return "not reached" if x is None else f"{x:.1f} months"
 
@@ -55,7 +58,7 @@ def render_pitch_markdown(draft: ExecutivePitchDraft, roi: ROISummary, strategy:
         return "n/a" if x is None else f"{x:,.0f}%"
 
     lines = [
-        render_ceo_pitch_markdown(draft, profile, roi).rstrip(),
+        render_ceo_pitch_markdown(draft, profile, roi, opening).rstrip(),
         "",
         "---",
         "",
@@ -126,7 +129,18 @@ def roi_headline(roi: ROISummary) -> str | None:
     return text
 
 
-def render_ceo_pitch_markdown(draft: ExecutivePitchDraft, profile: BusinessProfile, roi: ROISummary | None) -> str:
+def opening_markdown(opening: PitchOpening | None) -> list[str]:
+    """The pitch's first paragraph, with its citation; plus a note when no CEO statement was verifiable."""
+    if not opening:
+        return ["_No CEO statements found in the sources read._", ""]
+    lines = [f"{opening.text} [{opening.source_id}]", ""]
+    if opening.kind != "stated_priority":
+        lines += ["_No CEO statements found in the sources read; opening on the newest cited fact._", ""]
+    return lines
+
+
+def render_ceo_pitch_markdown(draft: ExecutivePitchDraft, profile: BusinessProfile, roi: ROISummary | None,
+                              opening: PitchOpening | None = None) -> str:
     """The one-page pitch to the CEO: (a) why we reached out, (b) opportunities, (c) solutions."""
     addressed = draft.addressed_to or draft.recipient_role
     title = draft.ceo_pitch_title or f"AI opportunities for {profile.business_name}"
@@ -137,6 +151,7 @@ def render_ceo_pitch_markdown(draft: ExecutivePitchDraft, profile: BusinessProfi
         "",
         "## Why we reached out",
         "",
+        *opening_markdown(opening),
         (draft.why_we_reached_out or draft.elevator_pitch).strip(),
         "",
         "## Opportunities we identified",
@@ -226,6 +241,15 @@ class BuilderAgent(Agent):
 
         # ---- pitch
         ctx.status("writing the one-page CEO pitch, outreach email and ROI model…")
+        opening = pitch_opening(profile)
+        if opening and opening.kind == "stated_priority":
+            shared += (f"<pitch_opening>\nThe pitch opens with this line, already written for you:\n{opening.text}\n"
+                       "Make `why_we_reached_out` follow directly from it: connect that stated priority to the "
+                       "opportunities. Don't repeat or reword the quote.\n</pitch_opening>\n\n")
+        elif opening:
+            shared += (f"<pitch_opening>\nNo verifiable recent CEO/MD statement was found. The pitch opens with this "
+                       f"cited fact:\n{opening.text}\nMake `why_we_reached_out` follow from it. Don't attribute any "
+                       "words or views to the CEO.\n</pitch_opening>\n\n")
 
         def check_pitch(d: ExecutivePitchDraft) -> str | None:
             if not d.why_we_reached_out.strip():
@@ -238,6 +262,11 @@ class BuilderAgent(Agent):
                 return "roi_line_items is empty; provide 2-5 value drivers."
             if len(d.email_body.split()) > 230:
                 return f"email_body is {len(d.email_body.split())} words; keep it under 180."
+            fake = [q for text in (d.why_we_reached_out, d.email_body, d.elevator_pitch, d.closing)
+                    for q in invented_quotes(text, profile)]
+            if fake:
+                return (f"These quoted passages are not verified statements: {fake[:3]}. Only quote words given in "
+                        "<pitch_opening>; otherwise paraphrase without quotation marks and without attributing them.")
             return None
 
         draft = ctx.llm.structured(
@@ -246,11 +275,16 @@ class BuilderAgent(Agent):
             model=ctx.settings.builder_model, effort=ctx.settings.effort, check=check_pitch,
         )
         roi = compute_roi(draft)
-        pitch_md = render_pitch_markdown(draft, roi, strategy, profile)
+        opening = pitch_opening(profile, draft.addressed_to)
+        ctx.note("pitch opens on " + (f"a stated priority ({opening.source_id})" if opening and opening.kind ==
+                 "stated_priority" else f"the newest cited fact ({opening.source_id})" if opening else
+                 "the research summary (no dated facts)"))
+        pitch_md = render_pitch_markdown(draft, roi, strategy, profile, opening)
         files = [
             write_text(ctx.path(PITCH_MD), pitch_md),
             write_json(ctx.path(PITCH_JSON), {"draft": draft.model_dump(mode="json"),
-                                             "roi": roi.model_dump(mode="json")}),
+                                             "roi": roi.model_dump(mode="json"),
+                                             "opening": opening.model_dump(mode="json") if opening else None}),
         ]
 
         # ---- prototype (optional: BUILD_PROTOTYPE=false or the API's include_prototype=false)

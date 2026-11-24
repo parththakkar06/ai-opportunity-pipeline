@@ -15,6 +15,7 @@ from datetime import date
 from pathlib import Path
 
 from agents.base import PROFILE_JSON, Agent
+from agents.ceo_voice import stated_priorities, verify_statements
 from agents.provenance import (
     detect_gaps, document_facts, format_evidence, gap_queries, mark_superseded, snippet_sources, validate_profile,
 )
@@ -143,6 +144,12 @@ class ResearcherAgent(Agent):
         elif profile.data_quality == "high":
             ctx.note("data quality high; gap round skipped")
 
+        profile.stated_priorities = stated_priorities(profile)
+        stats["quotes_verified"] = len(statements)
+        stats["stated_priorities"] = len(profile.stated_priorities)
+        if not profile.stated_priorities:
+            ctx.note("no verifiable recent CEO/MD statements found; the pitch will open on the newest cited fact")
+
         stats["facts"] = len(facts)
         stats["cache_hits"] = cache.hits
         stats["seconds"] = round(time.monotonic() - started, 1)
@@ -207,14 +214,18 @@ class ResearcherAgent(Agent):
                 extracted[source.source_id] = df
                 cache.set("facts", doc.url, df.model_dump(mode="json"))
 
-        for source, _doc in docs:
+        for source, doc in docs:
             df = extracted.get(source.source_id)
             sources.append(source)
             stats["documents"] += 1
             if not df:
                 continue
             facts.extend(document_facts(df, source))
-            for st in df.leader_statements:
+            kept, dropped = verify_statements(df.leader_statements, f"{doc.title}\n{doc.text}")
+            stats["quotes_dropped"] = stats.get("quotes_dropped", 0) + dropped
+            if dropped:
+                ctx.note(f"dropped {dropped} quote(s) from {source.source_id} not found word for word in the source")
+            for st in kept:
                 statements.append({**st.model_dump(), "source_id": source.source_id})
 
     def _write_profile(self, sources: list[SourceDoc], facts: list[Fact], homepage: HomepageSignals | None,
@@ -235,7 +246,7 @@ class ResearcherAgent(Agent):
         if previous is None:
             user = f"{head}\n\n<evidence>\n{evidence or 'No evidence was found.'}\n</evidence>\n\nProduce the business profile."
         else:
-            prior = previous.model_dump(mode="json", exclude={"facts", "sources_index", "leader_statements",
+            prior = previous.model_dump(mode="json", exclude={"facts", "sources_index", "leader_statements", "stated_priorities",
                                                               "provenance_warnings", "sources", "leadership"})
             user = (f"{head}\n\nA gap-filling round added evidence. Update the profile: keep what is still supported, "
                     f"replace anything a newer fact contradicts, fill gaps, and cite fact ids.\n\n"

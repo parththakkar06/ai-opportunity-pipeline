@@ -92,6 +92,28 @@ class LeaderStatement(BaseModel):
     date: Optional[str] = None
 
 
+class StatedPriority(BaseModel):
+    """A verified, recent statement by a current top leader (built in Python, never by the model)."""
+    topic: str
+    quote: str
+    speaker: str
+    role: str
+    date: Optional[str] = None
+    source_id: str
+    source_title: str = ""
+    url: str = ""
+
+
+class PitchOpening(BaseModel):
+    """The pitch's first line, composed in Python so a quote can never be altered."""
+    kind: Literal["stated_priority", "newest_fact"]
+    text: str
+    source_id: str
+    quote: Optional[str] = None
+    speaker: Optional[str] = None
+    date: Optional[str] = None
+
+
 class DocFacts(BaseModel):
     source_id: str = Field(description="Echo the source_id given for the document")
     document_date: Optional[str] = Field(None, description="ISO date of the document itself, if stated")
@@ -168,7 +190,8 @@ class BusinessProfile(BusinessProfileDraft):
     sources: list[str] = Field(default_factory=list, description="URLs actually used")
     sources_index: list[SourceDoc] = Field(default_factory=list)
     facts: list[Fact] = Field(default_factory=list)
-    leader_statements: list[dict] = Field(default_factory=list)
+    leader_statements: list[dict] = Field(default_factory=list, description="Verbatim-verified quotes only")
+    stated_priorities: list[StatedPriority] = Field(default_factory=list)
     provenance_warnings: list[str] = Field(default_factory=list)
 
 
@@ -398,6 +421,8 @@ class ReportOpportunity(BaseModel):
 class CEOPitch(BaseModel):
     addressed_to: str
     title: str
+    opening: Optional[PitchOpening] = None
+    ceo_statements_found: bool = False
     why_we_reached_out: str
     opportunities_identified: list[OpportunityHighlight]
     recommended_solutions: list[RecommendedSolution]

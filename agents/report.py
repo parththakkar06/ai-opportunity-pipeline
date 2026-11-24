@@ -26,7 +26,8 @@ from agents.builder import compute_roi, roi_headline
 from utils.io import HandoffError, cell, write_json, write_text
 from utils.schemas import (
     AIOpportunities, AssessmentReport, BusinessChallenge, BusinessChallenges, BusinessProfile, CEOPitch,
-    CompanyOverview, ExecutivePitchDraft, KeyBusinessInformation, ReportOpportunity, RubricScore, WinningStrategy,
+    CompanyOverview, ExecutivePitchDraft, KeyBusinessInformation, PitchOpening, ReportOpportunity, RubricScore,
+    WinningStrategy,
 )
 
 RUBRIC_LABELS = {
@@ -105,9 +106,12 @@ def build_report(out_dir: Path) -> AssessmentReport:
             raw = json.loads(pitch_path.read_text(encoding="utf-8"))
             draft = ExecutivePitchDraft.model_validate(raw.get("draft", raw))
             roi = compute_roi(draft) if draft.roi_line_items else None
+            opening = raw.get("opening") if isinstance(raw, dict) and "draft" in raw else None
+            opening = PitchOpening.model_validate(opening) if opening else None
             pitch = CEOPitch(
                 addressed_to=draft.addressed_to or draft.recipient_role,
                 title=draft.ceo_pitch_title or f"AI opportunities for {profile.business_name}",
+                opening=opening, ceo_statements_found=bool(opening and opening.kind == "stated_priority"),
                 why_we_reached_out=draft.why_we_reached_out or draft.elevator_pitch,
                 opportunities_identified=draft.opportunities_identified,
                 recommended_solutions=draft.recommended_solutions,
@@ -163,6 +167,13 @@ def build_report(out_dir: Path) -> AssessmentReport:
 # --------------------------------------------------------------------------- markdown
 def _bullets(items: list[str], empty: str = "_Not found in public sources._") -> list[str]:
     return [f"- {i}" for i in items] if items else [empty]
+
+
+def _opening_lines(p: CEOPitch) -> list[str]:
+    lines = [f"{p.opening.text} [{p.opening.source_id}]", ""] if p.opening else []
+    if not p.ceo_statements_found:
+        lines += ["_No CEO statements found in the sources read._", ""]
+    return lines
 
 
 def render_report_markdown(report: AssessmentReport) -> str:
@@ -250,7 +261,7 @@ def render_report_markdown(report: AssessmentReport) -> str:
         lines += ["_This stage has not run yet for this company._", ""]
     else:
         lines += [f"**To:** {p.addressed_to}, {report.business_name}", "", f"### {p.title}", "",
-                  "**Why we reached out**", "", p.why_we_reached_out, "", "**Opportunities we identified**", ""]
+                  "**Why we reached out**", "", *_opening_lines(p), p.why_we_reached_out, "", "**Opportunities we identified**", ""]
         lines += [f"- **{o.title}** — {o.evidence}" for o in p.opportunities_identified]
         lines += ["", "**What we recommend**", ""]
         for i, s in enumerate(p.recommended_solutions, 1):
@@ -271,7 +282,7 @@ def render_ceo_pitch_text(report: AssessmentReport) -> str:
     p = report.ceo_pitch
     if not p:
         return ""
-    lines = [p.title, "", f"To: {p.addressed_to}, {report.business_name}", "", "Why we reached out", p.why_we_reached_out,
+    lines = [p.title, "", f"To: {p.addressed_to}, {report.business_name}", "", "Why we reached out", *[x for x in _opening_lines(p) if x], p.why_we_reached_out,
              "", "Opportunities we identified", *[f"• {o.title} — {o.evidence}" for o in p.opportunities_identified],
              "", "What we recommend"]
     lines += [f"{i}. {s.name} ({s.maps_to}): {s.what_it_does} Impact: {s.expected_impact}. Timeline: {s.timeline}."
