@@ -1,0 +1,75 @@
+{
+  "documents": [
+    {
+      "source_id": "S1",
+      "document_date": null,
+      "facts": [
+        {
+          "statement": "Dr. Priya Patel is Founder & CEO of Maple Street Dental.",
+          "metric": "ceo",
+          "value": null,
+          "period": null,
+          "as_of": null
+        },
+        {
+          "statement": "Maple Street Dental FY25 revenue was approximately $9 million.",
+          "metric": "revenue",
+          "value": "$9 million",
+          "period": "FY25",
+          "as_of": null
+        },
+        {
+          "statement": "Maple Street Dental runs 2 clinics with 14 chairs and employs 22 staff.",
+          "metric": "chairs",
+          "value": "14",
+          "period": null,
+          "as_of": null
+        },
+        {
+          "statement": "Maple Street Dental serves about 6,500 active patients.",
+          "metric": "active_patients",
+          "value": "6,500",
+          "period": null,
+          "as_of": null
+        }
+      ],
+      "leader_statements": [
+        {
+          "speaker": "Dr. Priya Patel",
+          "role": "Founder & CEO",
+          "quote": "Filling every hygiene chair is our number one priority this year",
+          "topic": "utilization",
+          "date": null
+        }
+      ]
+    },
+    {
+      "source_id": "S2",
+      "document_date": null,
+      "facts": [
+        {
+          "statement": "Maple Street Dental opened its Round Rock clinic in April 2026.",
+          "metric": null,
+          "value": null,
+          "period": null,
+          "as_of": "2026-04-15"
+        },
+        {
+          "statement": "Maple Street Dental plans a third location in Cedar Park in 2027.",
+          "metric": null,
+          "value": null,
+          "period": null,
+          "as_of": null
+        },
+        {
+          "statement": "Reviews of Maple Street Dental mention long waits to rebook and unanswered calls at peak hours.",
+          "metric": null,
+          "value": null,
+          "period": null,
+          "as_of": null
+        }
+      ],
+      "leader_statements": []
+    }
+  ]
+}

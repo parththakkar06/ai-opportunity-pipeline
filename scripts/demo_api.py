@@ -53,7 +53,7 @@ class DemoLLM(FakeLLM):
                 raise LLMError("Every OpenRouter model is busy or unavailable right now (demo failure). "
                                "Wait a few minutes and use Resume.")
         result = super()._structured_once(**kw)
-        if name == "BusinessProfile":
+        if name == "BusinessProfileDraft":
             result.business_name = self.company
         return result
 
@@ -63,14 +63,15 @@ class DemoLLM(FakeLLM):
 
 
 class DemoResearch(FakeResearch):
-    def search_many(self, queries):
+    def search_many(self, queries, cache=None):
         time.sleep(DELAY)
-        return super().search_many(queries)
+        return super().search_many(queries, cache=cache)
 
 
 def demo_runner(company, *, url=None, context=None, ui=None, build_prototype=None, from_step=1, slug=None):
     settings = Settings(outputs_dir=Path(os.environ["OUTPUTS_DIR"]), model="demo/fake-model:free",
-                        builder_model="demo/fake-model:free", provider="demo")
+                        builder_model="demo/fake-model:free", cheap_model="demo/fake-model:free",
+                        provider="demo")
     research = DemoResearch([FakeProvider("tavily", results=6)])
     return run_pipeline(company, url=url or f"{re.sub(r'[^a-z0-9]+', '', company.lower())}.example",
                         context=context, settings=settings, llm=DemoLLM(company), research=research, ui=ui,

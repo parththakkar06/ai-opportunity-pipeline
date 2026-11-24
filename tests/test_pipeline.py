@@ -100,10 +100,40 @@ class FakeProvider:
         ]
 
 
+INVESTOR_URLS = [
+    "https://maplestreetdental.example/investors/q2-2026-update.pdf",
+    "https://maplestreetdental.example/press/round-rock-opening",
+]
+
+
 class FakeResearch(WebResearch):
-    def __init__(self, providers=None):
+    """Search returns generic results plus two pages on the company's own investor/press domain, which
+    rank as primary sources; fetch_document serves a fixture document for any URL."""
+
+    def __init__(self, providers=None, with_documents: bool = True):
         super().__init__(providers or [FakeProvider("tavily")], results_per_query=3)
         self.fetched: list[str] = []
+        self.documents_fetched: list[str] = []
+        self.with_documents = with_documents
+
+    def search_many(self, queries, cache=None):
+        bundle = super().search_many(queries, cache=cache)
+        if self.with_documents:
+            seen = {r.url for r in bundle.results}
+            for url in INVESTOR_URLS:
+                if url not in seen:
+                    bundle.results.insert(0, SearchResult(title="Maple Street Dental investor update", url=url,
+                                                          snippet="Q2 2026 update", provider="tavily", query="fixture"))
+        return bundle
+
+    def fetch_document(self, url, timeout=12.0):
+        from datetime import date as _date
+        from utils.fetch import FetchedDoc
+        self.documents_fetched.append(url)
+        return FetchedDoc(url=url, title="Maple Street Dental investor update",
+                          text=(FIXTURES / "investor_update.txt").read_text(),
+                          kind="pdf" if url.endswith(".pdf") else "html", published=None,
+                          retrieved=_date.today().isoformat(), via="httpx")
 
     def fetch_homepage(self, url):
         self.fetched.append(url)
@@ -157,7 +187,7 @@ def test_full_pipeline_offline(tmp_path):
     # --url reached the researcher: used for queries and the homepage fetch.
     assert research.fetched == ["https://maplestreetdental.example"]
     assert any("site:maplestreetdental.example" in q for q in research.providers[0].queries)
-    assert "maplestreetdental.example" in llm.prompts["BusinessProfile"]
+    assert "maplestreetdental.example" in llm.prompts["BusinessProfileDraft"]
 
     meta = json.loads((out / META_JSON).read_text())
     assert meta["total_input_tokens"] > 0 and meta["total_cost_usd"] > 0
@@ -209,7 +239,7 @@ def test_thin_search_results_force_low_data_quality(tmp_path):
         def fetch_homepage(self, url):
             return None
 
-    research = NoHomepage([FakeProvider("duckduckgo", results=0)])
+    research = NoHomepage([FakeProvider("duckduckgo", results=0)], with_documents=False)
     run_pipeline("Tiny Bakery", settings=settings(tmp_path), llm=FakeLLM(), research=research, ui=quiet_ui())
     profile = BusinessProfile.model_validate_json((tmp_path / "tiny-bakery" / PROFILE_JSON).read_text())
     assert profile.data_quality == "low"
@@ -366,8 +396,9 @@ def test_full_pipeline_through_gemini_client(tmp_path):
 
     structured = [c for c in client.models.configs if c.response_schema is not None]
     assert [c.response_schema.__name__ for c in structured] == [
-        "BusinessProfile", "BusinessChallenges", "AIOpportunities", "EvaluationScores", "ExecutiveSummary",
-        "ExecutivePitchDraft"]
+        "FactBatch", "FactBatch", "BusinessProfileDraft",            # stage 1: extraction, profile
+        "FactBatch", "BusinessProfileDraft",                          # stage 1: one gap-filling round
+        "BusinessChallenges", "AIOpportunities", "EvaluationScores", "ExecutiveSummary", "ExecutivePitchDraft"]
     for c in client.models.configs:
         assert c.system_instruction and isinstance(c.system_instruction, str)
         assert c.thinking_config is not None
@@ -376,12 +407,16 @@ def test_full_pipeline_through_gemini_client(tmp_path):
     # Effort maps to thinking levels: challenge analysis, scoring and the prototype run at BUILDER_EFFORT=high.
     levels = [getattr(c.thinking_config.thinking_level, "name", c.thinking_config.thinking_level)
               for c in client.models.configs]
-    assert levels == ["MEDIUM", "HIGH", "MEDIUM", "HIGH", "MEDIUM", "MEDIUM", "HIGH"]
+    # Fact extraction runs on the cheap model at low effort.
+    assert levels == ["LOW", "LOW", "MEDIUM", "LOW", "MEDIUM", "HIGH", "MEDIUM", "HIGH", "MEDIUM", "MEDIUM", "HIGH"]
 
     meta = json.loads((out / META_JSON).read_text())
-    # 6 structured calls x (100 in, 50+20 out) + stream (500 in, 3000+200 out); thinking counts as output.
-    assert meta["total_input_tokens"] == 6 * 100 + 500
-    assert meta["total_output_tokens"] == 6 * 70 + 3200
+    # 10 structured calls x (100 in, 50+20 out) + stream (500 in, 3000+200 out); thinking counts as output.
+    assert meta["total_input_tokens"] == 10 * 100 + 500
+    assert meta["total_output_tokens"] == 10 * 70 + 3200
+    # Tokens are logged per stage and add up to the total.
+    assert meta["stages"]["1"]["calls"] == 5
+    assert sum(st["input_tokens"] for st in meta["stages"].values()) == meta["total_input_tokens"]
 
 
 def test_gemini_parses_into_pydantic_and_records_usage():

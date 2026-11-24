@@ -287,7 +287,7 @@ def test_site_query_always_has_search_terms():
     from agents.researcher import build_queries
     queries = build_queries("Adani Realty", "adanirealty.com", None)
     site_queries = [q.text for q in queries if "site:" in q.text]
-    assert site_queries == ["Adani Realty about projects investors site:adanirealty.com"]
+    assert site_queries == ["Adani Realty investor relations results site:adanirealty.com"]
     for q in queries:
         terms = [w for w in q.text.split() if not w.startswith("site:")]
         assert terms, f"query {q.text!r} has no search terms"
