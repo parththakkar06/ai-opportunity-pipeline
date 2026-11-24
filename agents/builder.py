@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 from agents.base import (
+    profile_for_prompt,
     CHALLENGES_JSON, PITCH_JSON, PITCH_MD, PROFILE_JSON, PROTOTYPE_HTML, STRATEGY_JSON, Agent, as_json,
 )
 from utils.io import cell, read_model, write_json, write_text
@@ -216,7 +217,7 @@ class BuilderAgent(Agent):
         strategy = read_model(ctx.path(STRATEGY_JSON), WinningStrategy)
         challenges = read_model(ctx.path(CHALLENGES_JSON), BusinessChallenges)
         shared = (
-            f"<business_profile>\n{as_json(profile)}\n</business_profile>\n\n"
+            f"<business_profile>\n{as_json(profile_for_prompt(profile))}\n</business_profile>\n\n"
             f"<business_challenges>\n{as_json(challenges)}\n</business_challenges>\n\n"
             f"<ranked_opportunities>\n{as_json([r.model_dump(exclude={'scores'}) for r in strategy.ranking])}\n"
             "</ranked_opportunities>\n\n"

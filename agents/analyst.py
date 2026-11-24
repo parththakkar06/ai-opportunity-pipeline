@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from agents.base import CHALLENGES_JSON, PROFILE_JSON, Agent, as_json
+from agents.base import CHALLENGES_JSON, PROFILE_JSON, Agent, as_json, facts_digest, profile_for_prompt
 from utils.io import read_model, write_json
 from utils.schemas import BusinessChallenges, BusinessProfile
 
@@ -42,9 +42,11 @@ class ChallengeAnalystAgent(Agent):
         profile = read_model(ctx.path(PROFILE_JSON), BusinessProfile)
         ctx.status("diagnosing operational, sales and customer-experience challenges…")
         user = (
-            f"<business_profile>\n{as_json(profile)}\n</business_profile>\n\n"
-            f"Diagnose {MIN_CHALLENGES}-{MAX_CHALLENGES} business challenges for {profile.business_name}, "
-            "each with explicit reasoning from the signals above."
+            f"<business_profile>\n{as_json(profile_for_prompt(profile))}\n</business_profile>\n\n"
+            + (f"<evidence_facts>\n{facts_digest(profile)}\n</evidence_facts>\n\n" if profile.facts else "")
+            + f"Diagnose {MIN_CHALLENGES}-{MAX_CHALLENGES} business challenges for {profile.business_name}, "
+            "each with explicit reasoning from the signals above. Cite fact ids (e.g. S2.F4) in `signals` "
+            "when a signal comes from the evidence facts."
         )
         result = ctx.llm.structured(
             agent=self.key, system=self.prompt("challenge_analyst.md"), user=user, schema=BusinessChallenges,

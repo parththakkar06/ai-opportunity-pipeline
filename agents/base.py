@@ -70,6 +70,7 @@ class PipelineContext:
     status: Callable[[str], None] = lambda _msg: None
     note: Callable[[str], None] = lambda _msg: None
     search_providers_used: list[str] = field(default_factory=list)
+    research_stats: dict = field(default_factory=dict)
 
     def path(self, name: str) -> Path:
         return self.out_dir / name
@@ -98,6 +99,22 @@ def _plain(value):
     if isinstance(value, dict):
         return {k: _plain(v) for k, v in value.items()}
     return value
+
+
+PROFILE_PROMPT_EXCLUDE = {"facts", "sources_index", "leader_statements", "provenance_warnings", "field_evidence",
+                          "leaders", "sources"}
+
+
+def profile_for_prompt(profile) -> dict:
+    """The profile as downstream agents see it: findings, not the raw evidence ledger (saves tokens)."""
+    return profile.model_dump(mode="json", exclude=PROFILE_PROMPT_EXCLUDE)
+
+
+def facts_digest(profile, limit: int = 60) -> str:
+    """Current (non-superseded) document facts, newest first, as compact cited lines."""
+    current = [f for f in getattr(profile, "facts", []) if not f.superseded_by and not f.fact_id.startswith("R")]
+    current.sort(key=lambda f: f.as_of or "", reverse=True)
+    return "\n".join(f"{f.fact_id} [{f.as_of or 'undated'}] {f.statement}" for f in current[:limit])
 
 
 def as_json(model: BaseModel | dict | list) -> str:

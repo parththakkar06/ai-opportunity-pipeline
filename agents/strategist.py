@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from agents.base import CHALLENGES_JSON, OPPORTUNITIES_JSON, PROFILE_JSON, Agent, as_json
+from agents.base import CHALLENGES_JSON, OPPORTUNITIES_JSON, PROFILE_JSON, Agent, as_json, profile_for_prompt
 from utils.io import read_model, write_json
 from utils.schemas import AIOpportunities, BusinessChallenges, BusinessProfile
 
@@ -46,7 +46,7 @@ class StrategistAgent(Agent):
         challenge_ids = {c.id for c in challenges.challenges}
         ctx.status("mapping AI opportunities to the diagnosed challenges…")
         user = (
-            f"<business_profile>\n{as_json(profile)}\n</business_profile>\n\n"
+            f"<business_profile>\n{as_json(profile_for_prompt(profile))}\n</business_profile>\n\n"
             f"<business_challenges>\n{as_json(challenges)}\n</business_challenges>\n\n"
             f"Propose {MIN_IDEAS}-{MAX_IDEAS} AI opportunities for {profile.business_name}. "
             f"Valid challenge ids: {sorted(challenge_ids)}."

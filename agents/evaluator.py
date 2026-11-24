@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from agents.base import OPPORTUNITIES_JSON, PROFILE_JSON, STRATEGY_JSON, STRATEGY_MD, Agent, as_json
+from agents.base import OPPORTUNITIES_JSON, PROFILE_JSON, STRATEGY_JSON, STRATEGY_MD, Agent, as_json, profile_for_prompt
 from utils.config import RubricWeights
 from utils.io import cell, read_model, write_json, write_text
 from utils.schemas import (
@@ -142,7 +142,7 @@ class EvaluatorAgent(Agent):
         ctx.status("scoring opportunities against the rubric…")
         scores = ctx.llm.structured(
             agent=self.key, system=self.prompt("evaluator.md"),
-            user=(f"<business_profile>\n{as_json(profile)}\n</business_profile>\n\n"
+            user=(f"<business_profile>\n{as_json(profile_for_prompt(profile))}\n</business_profile>\n\n"
                   f"<opportunities>\n{as_json(opps)}\n</opportunities>\n\nScore every opportunity."),
             schema=EvaluationScores, model=ctx.settings.model, effort=ctx.settings.builder_effort,
             check=check_scores,
@@ -170,7 +170,7 @@ class EvaluatorAgent(Agent):
         ctx.status("writing the executive decision memo…")
         summary = ctx.llm.structured(
             agent=self.key, system=self.prompt("evaluator_summary.md"),
-            user=(f"<business_profile>\n{as_json(profile)}\n</business_profile>\n\n"
+            user=(f"<business_profile>\n{as_json(profile_for_prompt(profile))}\n</business_profile>\n\n"
                   f"<rubric_weights>\n{as_json(weights.as_dict())}\n</rubric_weights>\n\n"
                   f"<ranking>\n{ranking_table}\n</ranking>\n\n"
                   f"<all_scores>\n{as_json([r.scores for r in ranking])}\n</all_scores>\n\n"
