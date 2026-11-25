@@ -72,7 +72,7 @@ export function Report({ payload, onEmail }: { payload: ReportPayload; onEmail: 
           <MobileContents active={active} />
         )}
 
-        <main id="report" className="print-full min-w-0 pt-10 pb-32 min-[1100px]:pt-14">
+        <article id="report" aria-labelledby="report-title" className="print-full min-w-0 pt-10 pb-32 min-[1100px]:pt-14">
           <Header report={r} titleRef={titleRef} />
           <Metrics report={r} />
           <Section n={1} id="overview" title="Overview">
@@ -93,7 +93,7 @@ export function Report({ payload, onEmail }: { payload: ReportPayload; onEmail: 
           <Section n={6} id="sources" title="Sources and assumptions">
             <Sources report={r} />
           </Section>
-        </main>
+        </article>
       </div>
     </CitationProvider>
   )
@@ -106,7 +106,7 @@ function Header({ report: r, titleRef }: { report: AssessmentReport; titleRef: R
   const partial = r.stages_completed.length < 4
   return (
     <header>
-      <h1 ref={titleRef} tabIndex={-1} translate="no" className="display text-[2.25rem] text-ink sm:text-[2.75rem]">
+      <h1 id="report-title" ref={titleRef} tabIndex={-1} translate="no" className="display text-[2.25rem] text-ink sm:text-[2.75rem]">
         {r.business_name}
       </h1>
       <p className="prose-serif mt-2 line-clamp-2 text-ink-2" title={firstSentence}>{firstSentence}</p>

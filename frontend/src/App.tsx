@@ -17,6 +17,9 @@ const DATA_MODE = import.meta.env.DEV ? readDataMode() : 'demo'
 // Everything past the first screen loads on demand.
 const Report = lazy(() => import('@/components/report/Report').then((m) => ({ default: m.Report })))
 const RunTimeline = lazy(() => import('@/components/run/RunTimeline').then((m) => ({ default: m.RunTimeline })))
+const OrbitalDemo = lazy(() =>
+  import('@/components/ui/radial-orbital-timeline-demo').then((m) => ({ default: m.RadialOrbitalTimelineDemo })),
+)
 const HowItWorks = lazy(() => import('@/components/HowItWorks').then((m) => ({ default: m.HowItWorks })))
 const ExportMenu = lazy(() => import('@/components/report/ExportMenu').then((m) => ({ default: m.ExportMenu })))
 const EmailSheet = lazy(() => import('@/components/report/ExportMenu').then((m) => ({ default: m.EmailSheet })))
@@ -183,7 +186,7 @@ export default function App() {
         }
       />
 
-      <div id="main" tabIndex={-1} className="focus:outline-none">
+      <main id="main" tabIndex={-1} className="focus:outline-none">
         {loadError && url.view === 'report' && (
           <p role="alert" className="mx-auto mt-6 max-w-[44rem] border-l-2 border-negative py-1 pl-3 text-sm text-ink [overflow-wrap:anywhere]">
             {loadError}
@@ -197,6 +200,8 @@ export default function App() {
               onResume={(from) => void analyze(run.company, run.url, run.includePrototype, from, run.runSlug)}
               onDismiss={() => setRun((r) => (r ? { ...r, dismissed: true } : r))}
             />
+          ) : url.view === 'orbital-demo' ? (
+            <OrbitalDemo />
           ) : url.view === 'how-it-works' ? (
             <HowItWorks run={running ? run : null} meta={payload?.run_meta} />
           ) : url.view === 'report' ? (
@@ -218,7 +223,7 @@ export default function App() {
             />
           )}
         </Suspense>
-      </div>
+      </main>
 
       {import.meta.env.DEV && reportOpen && <DataToggle mode={DATA_MODE} />}
       {emailOpen && payload && (

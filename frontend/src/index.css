@@ -308,3 +308,17 @@ label:has(input[type="checkbox"]) {
     text-decoration: none !important;
   }
 }
+
+/* Radial orbital timeline (components/ui/radial-orbital-timeline.tsx). Its suggested globals.css block was
+ * written for Tailwind v3. Tailwind v4 already generates every utility in it (animate-pulse/ping,
+ * transition-all, duration-*, backdrop-blur-lg, z-*, opacity-*, the white/black alpha colours), and v4's
+ * scale-125/150 use the `scale` property, so the block's `transform: scale()` copies would compound to
+ * 2.25x. Only the two classes Tailwind doesn't provide are added here. */
+@layer utilities {
+  .bg-gradient-orbital {
+    background: linear-gradient(to bottom right, #6366f1, #3b82f6, #14b8a6);
+  }
+  .shadow-orbital {
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+  }
+}

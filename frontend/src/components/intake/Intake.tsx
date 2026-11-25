@@ -206,7 +206,7 @@ export function Intake({
                     className="ml-auto"
                     disabled={running}
                     onClick={() => onResume(r)}
-                    aria-label={`Resume ${r.business_name} from stage ${r.next_stage}`}
+                    aria-label={`Resume from stage ${r.next_stage}: ${r.business_name}`}
                   >
                     Resume from stage {r.next_stage}
                   </Button>

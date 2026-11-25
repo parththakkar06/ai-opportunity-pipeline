@@ -48,8 +48,11 @@ export function HowItWorks({ run, meta }: { run: RunState | null; meta?: RunMeta
   const all = Object.values(totals).reduce((n, s) => n + (s.input_tokens ?? 0) + (s.output_tokens ?? 0), 0)
   const items: TimelineItem[] = STEPS.map(({ stage, ...step }) => {
     const state = run && stage <= 4 ? run.progress[stage]?.state : undefined
+    // Live state during a run; with a report open every step has run; otherwise nothing has run yet.
     const status: TimelineItem['status'] = !run
-      ? undefined
+      ? meta
+        ? 'completed'
+        : 'pending'
       : state === 'done' || state === 'skipped'
         ? 'completed'
         : state === 'active'
@@ -59,26 +62,43 @@ export function HowItWorks({ run, meta }: { run: RunState | null; meta?: RunMeta
             : 'pending'
     const s = totals[String(stage)]
     // Python-only steps use no tokens, so they get no bar; LLM steps show their share once a report is open.
-    const share = step.category !== 'llm' ? -1 : all && s ? Math.round((((s.input_tokens ?? 0) + (s.output_tokens ?? 0)) / all) * 100) : -1
+    const share = step.category === 'llm' && all && s ? Math.round((((s.input_tokens ?? 0) + (s.output_tokens ?? 0)) / all) * 100) : 0
     return { ...step, status, energy: share }
   })
 
   return (
-    <div className="mx-auto max-w-[60rem] px-4 pt-14 pb-24 sm:px-6">
-      <h1 ref={headingRef} tabIndex={-1} className="display text-[2.25rem] text-ink sm:text-[2.75rem]">
-        How it works
-      </h1>
-      <p className="prose-serif mt-3 text-ink-2">
-        Four model stages, with Python doing the parts that must be exact: provenance, scoring, verification and
-        exports. Select a step to see what it does and what it connects to.
-        {meta ? ' Bars show each stage’s share of the open report’s tokens.' : ''}
+    <div className="pb-24">
+      <div className="mx-auto max-w-[60rem] px-4 pt-14 sm:px-6">
+        <h1 ref={headingRef} tabIndex={-1} className="display text-[2.25rem] text-ink sm:text-[2.75rem]">
+          How it works
+        </h1>
+        <p className="prose-serif mt-3 text-ink-2">
+          Four model stages, with Python doing the parts that must be exact: provenance, scoring, verification and
+          exports. Select a step in the orbit to see what it does and what it connects to.
+          {meta ? ' “Energy” is each stage’s share of the open report’s tokens; Python-only steps use none.' : ''}
+        </p>
+      </div>
+      <section className="mt-8" aria-label="Pipeline diagram">
+        <p className="sr-only">An interactive orbit of the pipeline steps. The same steps are listed after it.</p>
+        <RadialOrbitalTimeline timelineData={items} />
+      </section>
+      {/* The orbit is a mouse-driven visual, so the same steps are listed here for keyboard and screen readers. */}
+      <ol className="mx-auto mt-10 max-w-[60rem] divide-y divide-rule border-y border-rule px-4 sm:px-6" aria-label="Pipeline steps">
+        {items.map((it) => (
+          <li key={it.id} className="grid gap-1 py-3 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-4">
+            <p className="text-[15px] font-medium text-ink">
+              {it.id}. {it.title}
+              <span className="meta block font-normal">{it.date}</span>
+            </p>
+            <p className="text-[15px] text-ink-2">{it.content}</p>
+          </li>
+        ))}
+      </ol>
+      <p className="mx-auto mt-6 max-w-[60rem] px-4 text-sm sm:px-6">
+        <a href="?view=orbital-demo" className="text-brand underline decoration-brand/40 underline-offset-4">
+          See the orbital timeline component’s own demo
+        </a>
       </p>
-      <RadialOrbitalTimeline
-        timelineData={items}
-        label="Pipeline steps"
-        energyLabel="Share of this run’s tokens"
-        className="mt-10"
-      />
     </div>
   )
 }

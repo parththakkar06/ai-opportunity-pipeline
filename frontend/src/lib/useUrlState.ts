@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 // and #section anchors point inside a report (the table of contents keeps them current). Old ?tab= links
 // from the tabbed design are rewritten to the matching #section on load.
 
-export type View = 'home' | 'report' | 'how-it-works'
+export type View = 'home' | 'report' | 'how-it-works' | 'orbital-demo'
 export interface UrlState {
   run: string | null
   view: View
@@ -24,6 +24,7 @@ function read(): UrlState {
   const run = params.get('run')
   const valid = run && SLUG.test(run) ? run : null
   if (params.get('view') === 'how-it-works') return { run: null, view: 'how-it-works' }
+  if (params.get('view') === 'orbital-demo') return { run: null, view: 'orbital-demo' }
   return { run: valid, view: valid ? 'report' : 'home' }
 }
 
@@ -38,7 +39,7 @@ function migrateLegacyTab() {
 
 function urlFor(state: UrlState, keepHash: boolean): string {
   const params = new URLSearchParams()
-  if (state.view === 'how-it-works') params.set('view', 'how-it-works')
+  if (state.view === 'how-it-works' || state.view === 'orbital-demo') params.set('view', state.view)
   else if (state.run) params.set('run', state.run)
   const query = params.toString()
   return `${window.location.pathname}${query ? `?${query}` : ''}${keepHash ? window.location.hash : ''}`
