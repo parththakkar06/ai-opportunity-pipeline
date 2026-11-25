@@ -336,6 +336,42 @@ class RecommendedSolution(BaseModel):
     timeline: str = Field(description="e.g. '6-week pilot, then rollout'")
 
 
+ClaimStatus = Literal["supported", "partial", "stale", "unsupported", "estimate"]
+
+
+class VerifiedClaim(BaseModel):
+    id: str
+    kind: Literal["name", "number", "period"]
+    text: str = Field(description="The claim as written, e.g. '₹4,163 crore' or 'Francis Alfred'")
+    field: str = Field(description="Pitch field it appeared in, e.g. 'why_we_reached_out'")
+    sentence: str = ""
+    status: ClaimStatus
+    evidence: list[str] = Field(default_factory=list, description="Fact ids that support (or supersede) it")
+    action: Literal["kept", "flagged", "replaced", "removed"] = "kept"
+    note: str = ""
+
+
+class VerificationReport(BaseModel):
+    """04_verification.json: every factual claim in the pitch, checked against the evidence."""
+    claims: list[VerifiedClaim] = Field(default_factory=list)
+    checked: int = 0                 # factual claims (estimates excluded)
+    supported: int = 0
+    pass_rate: Optional[float] = None   # supported / checked, 0-1; None if nothing to check
+    estimates: int = 0
+    llm_checked: int = 0
+    actions: list[str] = Field(default_factory=list)
+
+
+class ClaimVerdict(BaseModel):
+    claim_id: str
+    verdict: Literal["yes", "no", "partial"]
+    fact_ids: list[str] = Field(default_factory=list)
+
+
+class ClaimVerdicts(BaseModel):
+    verdicts: list[ClaimVerdict]
+
+
 class ExecutivePitchDraft(BaseModel):
     recipient_role: str = Field(description="e.g. 'Managing Director & CEO'")
     addressed_to: str = Field("", description="The CEO's name and title if public (e.g. 'Mr. A. Kumar, CEO'), else the title")
@@ -445,6 +481,7 @@ class AssessmentReport(BaseModel):
     ai_opportunities: list[ReportOpportunity]
     recommended_opportunity_id: Optional[str] = None
     ceo_pitch: Optional[CEOPitch] = None
+    verification: Optional[VerificationReport] = None
     prototype_available: bool = False
     assumptions: list[str] = Field(default_factory=list)
     sources: list[str] = Field(default_factory=list)

@@ -19,14 +19,14 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from agents.base import (
-    CHALLENGES_JSON, META_JSON, OPPORTUNITIES_JSON, PITCH_JSON, PROFILE_JSON, PROTOTYPE_HTML, REPORT_JSON,
+    CHALLENGES_JSON, META_JSON, VERIFY_JSON, OPPORTUNITIES_JSON, PITCH_JSON, PROFILE_JSON, PROTOTYPE_HTML, REPORT_JSON,
     REPORT_MD, STRATEGY_JSON, find_file,
 )
 from agents.builder import compute_roi, roi_headline
 from utils.io import HandoffError, cell, write_json, write_text
 from utils.schemas import (
     AIOpportunities, AssessmentReport, BusinessChallenge, BusinessChallenges, BusinessProfile, CEOPitch,
-    CompanyOverview, ExecutivePitchDraft, KeyBusinessInformation, PitchOpening, ReportOpportunity, RubricScore,
+    CompanyOverview, ExecutivePitchDraft, KeyBusinessInformation, PitchOpening, ReportOpportunity, RubricScore, VerificationReport,
     WinningStrategy,
 )
 
@@ -124,6 +124,14 @@ def build_report(out_dir: Path) -> AssessmentReport:
         except (ValidationError, ValueError, OSError):
             pitch = None
 
+    verification = None
+    vpath = out_dir / VERIFY_JSON
+    if pitch is not None and vpath.exists():
+        try:
+            verification = VerificationReport.model_validate_json(vpath.read_text(encoding="utf-8"))
+        except (ValidationError, ValueError, OSError):
+            verification = None
+
     generated_at = None
     meta_path = out_dir / META_JSON
     if meta_path.exists():
@@ -158,6 +166,7 @@ def build_report(out_dir: Path) -> AssessmentReport:
         ai_opportunities=opportunities,
         recommended_opportunity_id=strategy.winner.id if strategy else None,
         ceo_pitch=pitch,
+        verification=verification,
         prototype_available=(out_dir / PROTOTYPE_HTML).exists(),
         assumptions=profile.assumptions,
         sources=profile.sources,
@@ -270,6 +279,11 @@ def render_report_markdown(report: AssessmentReport) -> str:
         if p.roi_headline:
             lines += ["", f"**The numbers:** {p.roi_headline}."]
         lines += ["", p.closing, ""]
+        v = report.verification
+        if v and v.pass_rate is not None:
+            lines += [f"**Verification:** {v.supported}/{v.checked} factual claims supported ({v.pass_rate:.0%}); "
+                      f"{v.estimates} estimate(s) excluded. Details in 04_verification.json.", ""]
+            lines += [f"- {a}" for a in v.actions] + ([""] if v.actions else [])
     if report.assumptions:
         lines += ["---", "", "### Assumptions", "", *_bullets(report.assumptions), ""]
     if report.sources:

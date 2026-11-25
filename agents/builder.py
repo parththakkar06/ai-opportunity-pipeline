@@ -7,9 +7,11 @@ from pathlib import Path
 
 from agents.base import (
     profile_for_prompt,
-    CHALLENGES_JSON, PITCH_JSON, PITCH_MD, PROFILE_JSON, PROTOTYPE_HTML, STRATEGY_JSON, Agent, as_json,
+    CHALLENGES_JSON, PITCH_JSON, PITCH_MD, PROFILE_JSON, PROTOTYPE_HTML, STRATEGY_JSON, VERIFY_JSON, Agent,
+    as_json,
 )
 from agents.ceo_voice import invented_quotes, pitch_opening
+from agents.verifier import verify_pitch
 from utils.io import cell, read_model, write_json, write_text
 from utils.schemas import (
     BusinessChallenges, BusinessProfile, ExecutivePitchDraft, PitchOpening, ROISummary, WinningStrategy,
@@ -274,6 +276,15 @@ class BuilderAgent(Agent):
             user=shared + "Write the one-page CEO pitch and the supporting outreach kit.", schema=ExecutivePitchDraft,
             model=ctx.settings.builder_model, effort=ctx.settings.effort, check=check_pitch,
         )
+        ctx.status("verifying every name, figure and period in the pitch against the evidence…")
+        draft, verification = verify_pitch(draft, profile, llm=ctx.llm, model=ctx.settings.cheap_model,
+                                           system=self.prompt("verifier.md"))
+        rate = f"{verification.pass_rate:.0%}" if verification.pass_rate is not None else "n/a"
+        ctx.note(f"verifier: {verification.supported}/{verification.checked} factual claims supported ({rate}), "
+                 f"{verification.estimates} estimates, {len(verification.actions)} action(s)"
+                 + (f", {verification.llm_checked} checked by {ctx.settings.cheap_model}" if verification.llm_checked else ""))
+        for a in verification.actions[:4]:
+            ctx.note(f"verifier: {a}")
         roi = compute_roi(draft)
         opening = pitch_opening(profile, draft.addressed_to)
         ctx.note("pitch opens on " + (f"a stated priority ({opening.source_id})" if opening and opening.kind ==
@@ -282,6 +293,7 @@ class BuilderAgent(Agent):
         pitch_md = render_pitch_markdown(draft, roi, strategy, profile, opening)
         files = [
             write_text(ctx.path(PITCH_MD), pitch_md),
+            write_json(ctx.path(VERIFY_JSON), verification),
             write_json(ctx.path(PITCH_JSON), {"draft": draft.model_dump(mode="json"),
                                              "roi": roi.model_dump(mode="json"),
                                              "opening": opening.model_dump(mode="json") if opening else None}),
