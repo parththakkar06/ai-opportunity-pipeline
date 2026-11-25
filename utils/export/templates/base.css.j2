@@ -1,0 +1,14 @@
+@page { size: A4; margin: {{ margin }}; }
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif; color: #1c1f24;
+       font-size: {{ font_pt }}pt; line-height: 1.42; margin: 0; }
+h1, h2, h3 { color: #111; line-height: 1.2; margin: 0; }
+a { color: {{ accent }}; text-decoration: none; }
+sup.cite { font-size: 0.68em; color: {{ accent }}; font-weight: 600; margin-left: 1px; }
+sup.nosrc { font-size: 0.68em; color: #9a5b00; margin-left: 2px; }
+.muted { color: #5b6270; }
+.rule { height: 3px; width: 48px; background: {{ accent }}; margin: 6px 0 10px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; vertical-align: top; padding: 4px 6px; border-bottom: 1px solid #e3e5e8; }
+th { font-size: 0.85em; color: #5b6270; font-weight: 600; }

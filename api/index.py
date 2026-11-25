@@ -141,6 +141,12 @@ def get_example(slug: str) -> dict[str, Any]:
         raise HTTPException(404, str(exc)) from exc
 
 
+from api import exports as _exports  # noqa: E402
+
+_exports._run_dir = run_dir
+app.include_router(_exports.router)
+
+
 @app.get("/api/examples/{slug}/prototype")
 def get_prototype(slug: str) -> FileResponse:
     path = run_dir(slug) / PROTOTYPE_HTML

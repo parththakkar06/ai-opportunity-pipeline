@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>{{ r.business_name }} · AI opportunity assessment</title>
+<style>
+{% include "base.css.j2" %}
+.cover { height: 250mm; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+.cover h1 { font-size: 30pt; }
+.cover .kpis { margin-top: 18mm; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6mm; }
+.kpi { border-top: 3px solid {{ accent }}; padding-top: 3mm; }
+.kpi b { display: block; font-size: 16pt; }
+.toc { page-break-after: always; }
+.toc ol { font-size: 12pt; line-height: 2; }
+section { page-break-before: always; }
+section:first-of-type { page-break-before: auto; }
+h2 { font-size: 17pt; margin-bottom: 4mm; }
+h3 { font-size: 11.5pt; margin: 5mm 0 1.5mm; }
+p { margin: 0 0 2.5mm; }
+.item { page-break-inside: avoid; margin-bottom: 4mm; }
+.tag { display: inline-block; font-size: 8pt; padding: 0 5px; border: 1px solid #d5d8dd; border-radius: 3px; color: #5b6270; margin-right: 4px; }
+.sources li { margin-bottom: 1.5mm; word-break: break-all; }
+</style></head>
+<body>
+{% macro cites(nums) %}{% for n in nums %}<sup class="cite">[{{ n }}]</sup>{% endfor %}{% endmacro %}
+<div class="cover">
+  <div class="muted">AI opportunity assessment</div>
+  <div class="rule"></div>
+  <h1>{{ r.business_name }}</h1>
+  <p class="muted" style="font-size:12pt">{{ ov.industry }}{% if ov.headquarters %} · {{ ov.headquarters }}{% endif %} · {{ date }}</p>
+  <div class="kpis">
+    <div class="kpi"><b>{% if v and v.pass_rate is not none %}{{ (v.pass_rate * 100) | round | int }}%{% else %}n/a{% endif %}</b>pitch claims verified{% if v and v.checked %} ({{ v.supported }}/{{ v.checked }}){% endif %}</div>
+    <div class="kpi"><b>{{ r.citations | length }}</b>sources cited</div>
+    <div class="kpi"><b>{{ r.data_quality | capitalize }}</b>research data quality</div>
+  </div>
+  {% if winner %}<p style="margin-top:14mm;font-size:12pt">Recommended: <strong>{{ winner.title }}</strong>{% if r.sensitivity %} · {{ "holds" if r.sensitivity.winner_stable else "changes" }} under conservative assumptions{% endif %}</p>{% endif %}
+</div>
+
+<div class="toc"><h2>Contents</h2><ol>
+  <li><a href="#s1">Company overview</a></li><li><a href="#s2">Key business information</a></li>
+  <li><a href="#s3">Business challenges</a></li><li><a href="#s4">AI opportunities</a></li>
+  <li><a href="#s5">CEO pitch</a></li><li><a href="#s6">Assumptions and sources</a></li></ol></div>
+
+<section id="s1"><h2>1. Company overview</h2>
+<p>{{ ov.what_they_do }}</p>
+<table>
+<tr><th>Industry</th><td>{{ ov.industry }}{% if ov.sub_industry %} · {{ ov.sub_industry }}{% endif %}</td></tr>
+<tr><th>Business model</th><td>{{ ov.business_model }}</td></tr>
+<tr><th>Headquarters</th><td>{{ ov.headquarters or "Not found" }}</td></tr>
+<tr><th>Presence</th><td>{{ ov.geographic_presence | join(", ") or "Not found" }}</td></tr>
+<tr><th>Leadership</th><td>{{ ov.leadership | join("; ") or "Current holder not confirmed by recent sources" }}</td></tr>
+{% if ov.scale.revenue %}<tr><th>Revenue</th><td>{{ ov.scale.revenue }}</td></tr>{% endif %}
+{% if ov.scale.projects_or_portfolio %}<tr><th>Portfolio</th><td>{{ ov.scale.projects_or_portfolio }}</td></tr>{% endif %}
+{% if ov.scale.employees %}<tr><th>Employees</th><td>{{ ov.scale.employees }}</td></tr>{% endif %}
+</table></section>
+
+<section id="s2"><h2>2. Key business information</h2>
+{% if ki.recent_developments %}<h3>Recent developments</h3><ul>{% for n in ki.recent_developments %}<li>{{ n.headline }}{% if n.date %} <span class="muted">({{ n.date }})</span>{% endif %}</li>{% endfor %}</ul>{% endif %}
+{% if ki.major_projects %}<h3>Major projects</h3><ul>{% for pr in ki.major_projects %}<li><strong>{{ pr.name }}</strong>{% if pr.location %}, {{ pr.location }}{% endif %}{% if pr.status %} · {{ pr.status }}{% endif %}</li>{% endfor %}</ul>{% endif %}
+{% if ki.expansion_plans %}<h3>Expansion plans</h3><ul>{% for e in ki.expansion_plans %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+{% if ki.competitors %}<h3>Competitors</h3><p>{{ ki.competitors | join(", ") }}</p>{% endif %}
+</section>
+
+<section id="s3"><h2>3. Business challenges</h2>
+{% for c in r.business_challenges %}<div class="item"><h3>{{ c.title }}{{ cites(marks[c.id]) }}</h3>
+<p><span class="tag">{{ c.category | replace("_", " ") }}</span><span class="tag">severity {{ c.severity }}</span><span class="tag">confidence {{ c.confidence }}</span></p>
+<p>{{ c.reasoning }}</p></div>{% endfor %}
+</section>
+
+<section id="s4"><h2>4. AI opportunities</h2>
+{% for o in r.ai_opportunities %}<div class="item"><h3>{{ o.rank or "–" }}. {{ o.title }}{% if o.is_recommended %} · recommended{% endif %}{{ cites(marks[o.id]) }}</h3>
+<p class="muted">{% if o.weighted_score is not none %}Score {{ o.weighted_score }}/100 · {% endif %}{{ o.effort }}{% if o.evidence_share is not none %} · evidence behind value {{ (o.evidence_share * 100) | round | int }}%{% endif %}</p>
+<p><strong>Problem:</strong> {{ o.problem_solved }}</p>
+<p><strong>How it works:</strong> {{ o.ai_mechanism }}</p>
+{% if o.build_vs_buy %}<p><strong>Build vs buy:</strong> {{ o.build_vs_buy.decision }}{% if o.build_vs_buy.vendors %} · {{ o.build_vs_buy.vendors | join(", ") }}{% endif %}</p>{% endif %}
+{% if o.pilot_30_60_90 %}<p><strong>Pilot:</strong> {% for m in o.pilot_30_60_90 | sort(attribute="day") %}day {{ m.day }}: {{ m.kpi }} {{ m.target }}{% if not loop.last %}; {% endif %}{% endfor %}</p>{% endif %}
+{% if o.why_not and not o.is_recommended %}<p class="muted"><em>Why not first: {{ o.why_not }}</em></p>{% endif %}
+</div>{% endfor %}
+</section>
+
+<section id="s5"><h2>5. CEO pitch</h2>
+{% if p %}<p>To: <strong>{{ p.addressed_to }}</strong></p><h3>{{ p.title }}</h3>
+{% if p.opening %}<p><strong>{{ p.opening.text }}</strong>{{ cites(marks["pitch-opening"]) }}</p>{% endif %}
+<p>{% for text, nums in why %}{{ text }}{{ cites(nums) }} {% else %}{{ p.why_we_reached_out }}{% endfor %}</p>
+<ul>{% for o in p.opportunities_identified %}<li><strong>{{ o.title }}.</strong> {{ o.evidence }}{{ cites(marks["pitch-opp-" ~ loop.index]) }}</li>{% endfor %}</ul>
+<ol>{% for s in p.recommended_solutions %}<li><strong>{{ s.name }}</strong>: {{ s.what_it_does }} <span class="muted">Impact: {{ s.expected_impact }}</span></li>{% endfor %}</ol>
+{% if p.roi_headline %}<p><strong>The numbers:</strong> {{ p.roi_headline }}.</p>{% endif %}
+<p>{{ p.closing }}</p>
+{% if v and v.pass_rate is not none %}<p class="muted">Verification: {{ v.supported }}/{{ v.checked }} factual claims supported; {{ v.estimates }} estimates excluded.</p>{% endif %}
+{% else %}<p class="muted">The pitch stage hasn't run for this company.</p>{% endif %}
+</section>
+
+<section id="s6"><h2>Assumptions and sources</h2>
+{% if r.assumptions %}<h3>Assumptions</h3><ul>{% for a in r.assumptions %}<li>{{ a }}</li>{% endfor %}</ul>{% endif %}
+<h3>Sources</h3>
+<ol class="sources">{% for c in r.citations %}<li value="{{ c.n }}"><strong>{{ c.title or c.url }}</strong>{% if c.date %}, {{ c.date }}{% endif %} · {{ c.source_type }} · <a href="{{ c.url }}">{{ c.url }}</a></li>{% else %}{% for s in r.sources %}<li>{{ s }}</li>{% endfor %}{% endfor %}</ol>
+</section>
+</body></html>

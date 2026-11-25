@@ -22,6 +22,10 @@ pip install -r requirements.txt
 cp .env.example .env        # then add your keys
 ```
 
+PDF exports use Playwright. On a Mac with Google Chrome installed it drives that Chrome and needs nothing else.
+Otherwise install its Chromium once: `playwright install chromium`. (WeasyPrint, then Chrome's own
+`--print-to-pdf`, are tried as fallbacks.)
+
 | Key | Needed? |
 |---|---|
 | `GEMINI_API_KEY` | Yes, for the default provider (`LLM_PROVIDER=gemini`). Get one at Google AI Studio |
@@ -40,6 +44,7 @@ python run_pipeline.py "Acme Dental" --url acmedental.com              # lock on
 python run_pipeline.py "Acme Dental" --context "family dentist, Austin" # or disambiguate with text
 python run_pipeline.py "Acme Dental" --from-step 3                     # reuse saved 01/02, rerun 3-4
 python run_pipeline.py "Acme Dental" --provider openai
+python run_pipeline.py "Acme Dental" --export                          # also write the 06_* exports
 ```
 
 Outputs go to `outputs/<business-slug>/`:
@@ -53,6 +58,8 @@ Outputs go to `outputs/<business-slug>/`:
 | `04_prototype.html` | Stage 4, optional (`--no-prototype` / `BUILD_PROTOTYPE=false` skips it) |
 | `05_assessment_report.json` / `.md` | **The 5-section report**, assembled in Python from the files above |
 | `00_run_meta.json` | Orchestrator (tokens, cost, search providers used) |
+| `04_verification.json` | Stage 4 verifier: every name, figure and period in the pitch, checked against the evidence |
+| `06_pitch_deck.pptx`, `06_report.pdf`, `06_pitch_onepage.pdf`, `06_outreach.eml` | `--export` (or the web app's Export menu); built from the files above, no LLM calls |
 
 ## Web app (FastAPI + React)
 

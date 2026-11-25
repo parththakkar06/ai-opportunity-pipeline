@@ -151,6 +151,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--refresh", action="store_true", help="Ignore the research cache and fetch everything again")
     p.add_argument("--provider", choices=["gemini", "openai", "openrouter"], help="Override LLM_PROVIDER from .env")
     p.add_argument("--outputs-dir", type=Path, help="Where to write outputs (default: ./outputs)")
+    p.add_argument("--export", action="store_true",
+                   help="Also write 06_pitch_deck.pptx, 06_report.pdf, 06_pitch_onepage.pdf and 06_outreach.eml")
     return p.parse_args(argv)
 
 
@@ -158,9 +160,18 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     ui = PipelineUI()
     try:
-        run_pipeline(args.business, url=args.url, context=args.context, from_step=args.from_step,
-                     provider=args.provider, outputs_root=args.outputs_dir, ui=ui,
-                     build_prototype=False if args.no_prototype else None, refresh=args.refresh)
+        result = run_pipeline(args.business, url=args.url, context=args.context, from_step=args.from_step,
+                              provider=args.provider, outputs_root=args.outputs_dir, ui=ui,
+                              build_prototype=False if args.no_prototype else None, refresh=args.refresh)
+        if args.export:
+            from utils.export.documents import write_exports
+            from utils.export.pdf import PDFUnavailable
+
+            try:
+                for path in write_exports(result.out_dir):
+                    print(f"exported {path}")
+            except (PDFUnavailable, ValueError) as exc:
+                ui.warn(f"Exports skipped: {exc}")
         return 0
     except (ConfigError, PipelineError, HandoffError, LLMError) as exc:
         ui.error(str(exc))

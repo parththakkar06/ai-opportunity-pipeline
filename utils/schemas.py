@@ -445,6 +445,8 @@ class ExecutivePitchDraft(BaseModel):
     opportunities_identified: list[OpportunityHighlight] = Field(default_factory=list)
     recommended_solutions: list[RecommendedSolution] = Field(default_factory=list)
     closing: str = Field("", description="Short close with a concrete next step")
+    short_version: str = Field("", description="The why-we-reached-out paragraph cut to about 60 words, same facts, "
+                                              "used only if the one-page PDF would overflow")
     email_subject: str
     email_body: str = Field(description="Plain text, under 180 words, no placeholders except [Your Name]")
     elevator_pitch: str = Field(description="About 150 words, speakable in 60 seconds")
@@ -536,6 +538,7 @@ class CEOPitch(BaseModel):
     recommended_solutions: list[RecommendedSolution]
     roi_headline: Optional[str] = None
     closing: str
+    short_version: str = ""
     email_subject: str
     email_body: str
     elevator_pitch: str

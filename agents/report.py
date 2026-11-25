@@ -124,6 +124,7 @@ def build_report(out_dir: Path) -> AssessmentReport:
                 recommended_solutions=draft.recommended_solutions,
                 roi_headline=roi_headline(roi) if roi else None,
                 closing=draft.closing or draft.next_step_cta,
+                short_version=draft.short_version,
                 email_subject=draft.email_subject, email_body=draft.email_body,
                 elevator_pitch=draft.elevator_pitch,
             )

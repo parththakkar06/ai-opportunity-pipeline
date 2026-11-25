@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>{{ p.title }}</title>
+<style>
+{% include "base.css.j2" %}
+h1 { font-size: 1.75em; margin-top: 2px; }
+.to { margin: 6px 0 12px; }
+h2 { font-size: 0.95em; margin: 12px 0 4px; color: {{ accent }}; }
+p { margin: 0 0 6px; }
+ul, ol { margin: 0; padding-left: 1.1em; }
+li { margin-bottom: 3px; }
+.numbers { margin-top: 10px; padding: 7px 10px; border-left: 3px solid {{ accent }}; background: #f5f6f8; }
+.foot { margin-top: 12px; font-size: 0.8em; }
+.foot li { margin-bottom: 1px; }
+</style></head>
+<body>
+{% macro cites(nums) %}{% for n in nums %}<sup class="cite">[{{ n }}]</sup>{% endfor %}{% endmacro %}
+<div class="muted">AI opportunity brief · {{ r.business_name }}</div>
+<div class="rule"></div>
+<h1>{{ p.title }}</h1>
+<div class="to">To: <strong>{{ p.addressed_to }}</strong>, {{ r.business_name }}</div>
+
+<h2>Why we reached out</h2>
+{% if p.opening %}<p><strong>{{ p.opening.text }}</strong>{{ cites(opening_marks) }}</p>{% endif %}
+{% if short and p.short_version %}<p>{{ p.short_version }}</p>
+{% else %}<p>{% for text, nums in why %}{{ text }}{{ cites(nums) }} {% else %}{{ p.why_we_reached_out }}{% endfor %}</p>{% endif %}
+
+<h2>Opportunities we identified</h2>
+<ul>{% for o in p.opportunities_identified %}<li><strong>{{ o.title }}.</strong> {{ o.evidence }}{{ cites(opp_marks[loop.index0]) }}{% if uncited[loop.index0] %}<sup class="nosrc">[no source]</sup>{% endif %}</li>{% endfor %}</ul>
+
+<h2>What we recommend</h2>
+<ol>{% for s in p.recommended_solutions %}<li><strong>{{ s.name }}</strong> ({{ s.maps_to }}). {{ s.what_it_does }}{% if not short %} <span class="muted">Impact: {{ s.expected_impact }} · {{ s.timeline }}</span>{% endif %}</li>{% endfor %}</ol>
+
+{% if p.roi_headline %}<div class="numbers"><strong>The numbers:</strong> {{ p.roi_headline }}. Assumptions are in the full report.</div>{% endif %}
+<p style="margin-top:10px">{{ p.closing }}</p>
+<p>[Your Name]</p>
+
+{% if sources %}<ol class="foot muted">{% for c in sources %}<li value="{{ c.n }}">{{ c.title or c.url }}{% if c.date %}, {{ c.date }}{% endif %} · {{ c.url }}</li>{% endfor %}</ol>{% endif %}
+</body></html>
