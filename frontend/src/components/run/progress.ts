@@ -1,10 +1,10 @@
 import type { StageState, StreamEvent } from '../../types'
 
 export const STAGES = [
-  { id: 1, title: 'Researcher', blurb: 'Web search, homepage and company facts' },
+  { id: 1, title: 'Researcher', blurb: 'Searches, reads up to 6 pages or PDFs, and extracts dated facts' },
   { id: 2, title: 'Challenge & Reasoning Analyst', blurb: 'Operational, sales and CX challenges with evidence-based reasoning' },
   { id: 3, title: 'AI Opportunity Strategist', blurb: 'Ideas mapped to the challenges, then scored on the rubric' },
-  { id: 4, title: 'CEO Pitch Builder', blurb: 'One-page pitch, outreach email and ROI model' },
+  { id: 4, title: 'CEO Pitch Builder', blurb: 'One-page pitch, ROI model, then the verifier checks every claim' },
 ] as const
 
 export interface StageProgress {

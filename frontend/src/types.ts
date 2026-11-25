@@ -73,7 +73,7 @@ export interface BusinessChallenge {
 }
 
 export interface RubricScore {
-  criterion: 'roi_potential' | 'feasibility' | 'speed_to_value' | 'competitive_moat'
+  criterion: 'roi_potential' | 'feasibility' | 'speed_to_value' | 'competitive_moat' | 'ceo_relevance'
   label: string
   score: number
   weight: number
@@ -251,6 +251,8 @@ export interface AssessmentReport {
   sensitivity?: Sensitivity | null
   citations?: Citation[]
   trace?: Trace | null
+  key_metrics?: KeyMetric[]
+  brand_color?: string | null
   prototype_available: boolean
   assumptions: string[]
   sources: string[]
@@ -262,12 +264,44 @@ export interface Usage {
   cost: string
 }
 
+export interface StageMeta {
+  title?: string
+  input_tokens?: number
+  output_tokens?: number
+  calls?: number
+  seconds?: number
+}
+
+export interface RunMeta {
+  provider?: string
+  model?: string
+  builder_model?: string
+  started_at?: string
+  finished_at?: string | null
+  total_input_tokens?: number
+  total_output_tokens?: number
+  total_cost_usd?: number | null
+  search_providers_used?: string[]
+  elapsed_seconds?: number | null
+  stages?: Record<string, StageMeta>
+  research?: Record<string, unknown>
+}
+
+export interface KeyMetric {
+  label: string
+  value: string
+  date: string | null
+  facts: string[]
+  citations: number[]
+}
+
 export interface ReportPayload {
   report: AssessmentReport
   markdown: string
   pitch_text: string
   prototype_url: string | null
   usage?: Usage
+  run_meta?: RunMeta | null
 }
 
 export interface SavedRun {
