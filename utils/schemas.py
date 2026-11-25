@@ -253,12 +253,22 @@ class CriterionScore(BaseModel):
     rationale: str
 
 
+class ValueDriver(BaseModel):
+    driver: str = Field(description="One input to the value estimate, e.g. 'site visits per quarter'")
+    source: Literal["public data", "industry benchmark", "assumption"]
+    evidence: list[str] = Field(default_factory=list, description="Fact ids (e.g. S2.F4) when source is public data")
+
+
 class OpportunityScore(BaseModel):
     opportunity_id: str
     feasibility: CriterionScore
     speed_to_value: CriterionScore
     roi_potential: CriterionScore
     competitive_moat: CriterionScore
+    ceo_relevance: Optional[CriterionScore] = Field(
+        None, description="Fit with the CEO's stated priorities and the core business (1-10)")
+    value_drivers: list[ValueDriver] = Field(default_factory=list,
+                                             description="The 2-4 inputs behind the value estimate and their source")
     biggest_risk: str
 
 
@@ -298,6 +308,23 @@ class RankedOpportunity(BaseModel):
     title: str
     weighted_score: float  # 0-100, computed in Python
     scores: OpportunityScore
+    evidence_share: Optional[float] = None   # 0-1: how much of the value estimate rests on evidence
+    roi_adjusted: Optional[float] = None     # roi × (0.6 + 0.4 × evidence_share)
+
+
+class RankChange(BaseModel):
+    opportunity_id: str
+    title: str
+    base_rank: int
+    conservative_rank: int
+
+
+class Sensitivity(BaseModel):
+    """Re-rank under conservative settings: low value estimates, double confidence shrink, -1 feasibility if effort is high."""
+    winner_stable: bool
+    conservative_winner_id: str
+    conservative_scores: dict[str, float]
+    rank_changes: list[RankChange] = Field(default_factory=list)
 
 
 class WinningStrategy(BaseModel):
@@ -307,6 +334,7 @@ class WinningStrategy(BaseModel):
     winner: AIOpportunity
     winner_weighted_score: float
     summary: ExecutiveSummary
+    sensitivity: Optional[Sensitivity] = None
 
 
 # --------------------------------------------------------------------------- Stage 4: CEO Pitch Builder
@@ -452,6 +480,9 @@ class ReportOpportunity(BaseModel):
     rubric: list[RubricScore] = Field(default_factory=list)
     biggest_risk: Optional[str] = None
     is_recommended: bool = False
+    evidence_share: Optional[float] = None
+    roi_adjusted: Optional[float] = None
+    why_not: Optional[str] = None
 
 
 class CEOPitch(BaseModel):
@@ -479,6 +510,7 @@ class AssessmentReport(BaseModel):
     key_business_information: KeyBusinessInformation
     business_challenges: list[BusinessChallenge]
     ai_opportunities: list[ReportOpportunity]
+    sensitivity: Optional[Sensitivity] = None
     recommended_opportunity_id: Optional[str] = None
     ceo_pitch: Optional[CEOPitch] = None
     verification: Optional[VerificationReport] = None

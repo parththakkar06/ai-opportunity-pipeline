@@ -58,29 +58,24 @@ def _bool(name: str, default: bool) -> bool:
 
 @dataclass(frozen=True)
 class RubricWeights:
-    roi_potential: float = 0.35
-    feasibility: float = 0.30
-    speed_to_value: float = 0.20
-    competitive_moat: float = 0.15
+    roi_potential: float = 0.30
+    ceo_relevance: float = 0.25
+    feasibility: float = 0.20
+    speed_to_value: float = 0.15
+    competitive_moat: float = 0.10
+
+    FIELDS = ("roi_potential", "ceo_relevance", "feasibility", "speed_to_value", "competitive_moat")
 
     def normalized(self) -> "RubricWeights":
-        total = self.roi_potential + self.feasibility + self.speed_to_value + self.competitive_moat
+        total = sum(getattr(self, f) for f in self.FIELDS)
         if total <= 0:
             raise ConfigError("Rubric weights must sum to a positive number")
-        return RubricWeights(
-            roi_potential=self.roi_potential / total,
-            feasibility=self.feasibility / total,
-            speed_to_value=self.speed_to_value / total,
-            competitive_moat=self.competitive_moat / total,
-        )
+        return RubricWeights(**{f: getattr(self, f) / total for f in self.FIELDS})
 
     def as_dict(self) -> dict[str, float]:
-        return {
-            "roi_potential": round(self.roi_potential, 4),
-            "feasibility": round(self.feasibility, 4),
-            "speed_to_value": round(self.speed_to_value, 4),
-            "competitive_moat": round(self.competitive_moat, 4),
-        }
+        """Normalized weights (they sum to 1), as stored with each strategy."""
+        n = self.normalized()
+        return {f: round(getattr(n, f), 4) for f in self.FIELDS}
 
 
 @dataclass
@@ -138,10 +133,11 @@ def load_settings(provider_override: str | None = None) -> Settings:
             raise ConfigError(f"{name} must be one of {sorted(VALID_EFFORTS)}, got {value!r}")
 
     weights = RubricWeights(
-        roi_potential=_float("WEIGHT_ROI", 0.35),
-        feasibility=_float("WEIGHT_FEASIBILITY", 0.30),
-        speed_to_value=_float("WEIGHT_SPEED", 0.20),
-        competitive_moat=_float("WEIGHT_MOAT", 0.15),
+        roi_potential=_float("WEIGHT_ROI", 0.30),
+        ceo_relevance=_float("WEIGHT_CEO_RELEVANCE", 0.25),
+        feasibility=_float("WEIGHT_FEASIBILITY", 0.20),
+        speed_to_value=_float("WEIGHT_SPEED", 0.15),
+        competitive_moat=_float("WEIGHT_MOAT", 0.10),
     ).normalized()
 
     outputs_dir = Path(_env("OUTPUTS_DIR", str(DEFAULT_OUTPUTS_DIR))).expanduser()
