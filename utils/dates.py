@@ -74,7 +74,8 @@ def parse_as_of(text: str | None) -> str | None:
         return _iso(int(m.group(1)), int(m.group(2)), 1)
     m = re.search(r"\b(20[12]\d)\b", t)
     if m:
-        return _iso(int(m.group(1)), 12, 31)
+        # A bare year means "some time that year"; never date it in the future.
+        return min(_iso(int(m.group(1)), 12, 31), date.today().isoformat())
     return None
 
 

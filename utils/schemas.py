@@ -541,6 +541,36 @@ class CEOPitch(BaseModel):
     elevator_pitch: str
 
 
+class Citation(BaseModel):
+    n: int                       # the [n] shown in the report
+    source_id: str               # S3 (document) or R12 (search snippet)
+    url: str
+    title: str
+    date: Optional[str] = None   # published, else retrieved
+    source_type: str = ""
+
+
+class TraceNode(BaseModel):
+    id: str                      # fact id, challenge id, opportunity id, or pitch-<field>-<i>
+    kind: Literal["fact", "challenge", "opportunity", "pitch"]
+    label: str
+    field: str = ""              # pitch nodes: which pitch field the line is from
+    facts: list[str] = Field(default_factory=list)
+    citations: list[int] = Field(default_factory=list)
+
+
+class TraceEdge(BaseModel):
+    source: str
+    target: str
+
+
+class Trace(BaseModel):
+    """fact -> challenge -> opportunity -> pitch line, built in Python from ids and evidence already in the run."""
+    nodes: list[TraceNode] = Field(default_factory=list)
+    edges: list[TraceEdge] = Field(default_factory=list)
+    uncited: list[str] = Field(default_factory=list, description="Factual pitch lines with no resolvable source")
+
+
 class AssessmentReport(BaseModel):
     business_name: str
     slug: str
@@ -558,6 +588,8 @@ class AssessmentReport(BaseModel):
     prototype_available: bool = False
     assumptions: list[str] = Field(default_factory=list)
     sources: list[str] = Field(default_factory=list)
+    citations: list[Citation] = Field(default_factory=list)
+    trace: Optional[Trace] = None
 
 
 class RunMeta(BaseModel):

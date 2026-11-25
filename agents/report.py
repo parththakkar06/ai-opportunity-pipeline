@@ -24,6 +24,7 @@ from agents.base import (
 )
 from agents.builder import compute_roi, roi_headline
 from utils.io import HandoffError, cell, write_json, write_text
+from agents.trace import build_trace
 from utils.schemas import (
     AIOpportunities, AssessmentReport, BusinessChallenge, BusinessChallenges, BusinessProfile, CEOPitch,
     CompanyOverview, ExecutivePitchDraft, KeyBusinessInformation, PitchOpening, ReportOpportunity, RubricScore, VerificationReport,
@@ -149,7 +150,7 @@ def build_report(out_dir: Path) -> AssessmentReport:
         generated_at = datetime.fromtimestamp(
             find_file(out_dir, PROFILE_JSON).stat().st_mtime, tz=timezone.utc).isoformat(timespec="seconds")
 
-    return AssessmentReport(
+    report = AssessmentReport(
         business_name=profile.business_name,
         slug=out_dir.name,
         generated_at=generated_at,
@@ -178,6 +179,8 @@ def build_report(out_dir: Path) -> AssessmentReport:
         assumptions=profile.assumptions,
         sources=profile.sources,
     )
+    report.citations, report.trace = build_trace(report, profile, challenges, opps, strategy)
+    return report
 
 
 # --------------------------------------------------------------------------- markdown
@@ -185,8 +188,19 @@ def _bullets(items: list[str], empty: str = "_Not found in public sources._") ->
     return [f"- {i}" for i in items] if items else [empty]
 
 
-def _opening_lines(p: CEOPitch) -> list[str]:
-    lines = [f"{p.opening.text} [{p.opening.source_id}]", ""] if p.opening else []
+def _marks(report: AssessmentReport, node_id: str) -> str:
+    """Footnote markers for a rendered claim: ' [1][3]', or ' [no source]' for an uncited factual line."""
+    if not report.trace:
+        return ""
+    node = next((n for n in report.trace.nodes if n.id == node_id), None)
+    if node and node.citations:
+        return " " + "".join(f"[{n}]" for n in node.citations)
+    return " [no source]" if node_id in report.trace.uncited else ""
+
+
+def _opening_lines(p: CEOPitch, report: AssessmentReport | None = None) -> list[str]:
+    marks = _marks(report, "pitch-opening") if report and report.trace else f" [{p.opening.source_id}]" if p.opening else ""
+    lines = [f"{p.opening.text}{marks}", ""] if p.opening else []
     if not p.ceo_statements_found:
         lines += ["_No CEO statements found in the sources read._", ""]
     return lines
@@ -242,7 +256,7 @@ def render_report_markdown(report: AssessmentReport) -> str:
     labels = {"operational": "Operational", "sales": "Sales", "customer_experience": "Customer experience"}
     for c in report.business_challenges:
         lines += [
-            f"### {c.id} · {c.title}",
+            f"### {c.id} · {c.title}{_marks(report, c.id)}",
             f"_{labels.get(c.category, c.category)} · severity {c.severity} · confidence {c.confidence}_",
             "",
             c.description,
@@ -261,7 +275,7 @@ def render_report_markdown(report: AssessmentReport) -> str:
         star = " ⭐ Recommended" if o.is_recommended else ""
         score = f" · score {o.weighted_score:.1f}/100" if o.weighted_score is not None else ""
         lines += [
-            f"### {o.rank or '-'}. {o.title}{star}",
+            f"### {o.rank or '-'}. {o.title}{star}{_marks(report, o.id)}",
             f"_{o.category.replace('_', ' ')}{score} · solves {', '.join(o.addresses_challenges) or '—'}_",
             "",
             f"- **Applies to:** {o.applies_to}",
@@ -299,8 +313,10 @@ def render_report_markdown(report: AssessmentReport) -> str:
         lines += ["_This stage has not run yet for this company._", ""]
     else:
         lines += [f"**To:** {p.addressed_to}, {report.business_name}", "", f"### {p.title}", "",
-                  "**Why we reached out**", "", *_opening_lines(p), p.why_we_reached_out, "", "**Opportunities we identified**", ""]
-        lines += [f"- **{o.title}** — {o.evidence}" for o in p.opportunities_identified]
+                  "**Why we reached out**", "", *_opening_lines(p, report), _cited_paragraph(report, p), "",
+                  "**Opportunities we identified**", ""]
+        lines += [f"- **{o.title}** — {o.evidence}{_marks(report, f'pitch-opp-{i}')}"
+                  for i, o in enumerate(p.opportunities_identified, 1)]
         lines += ["", "**What we recommend**", ""]
         for i, s in enumerate(p.recommended_solutions, 1):
             lines.append(f"{i}. **{s.name}** ({s.maps_to}) — {s.what_it_does} Impact: {s.expected_impact}. "
@@ -315,9 +331,22 @@ def render_report_markdown(report: AssessmentReport) -> str:
             lines += [f"- {a}" for a in v.actions] + ([""] if v.actions else [])
     if report.assumptions:
         lines += ["---", "", "### Assumptions", "", *_bullets(report.assumptions), ""]
-    if report.sources:
+    if report.citations:
+        lines += ["### Sources", ""]
+        lines += [f"{c.n}. [{c.title or c.url}]({c.url}) · {c.source_type or 'source'}"
+                  + (f" · {c.date}" if c.date else "") + f" · `{c.source_id}`" for c in report.citations]
+        lines.append("")
+    elif report.sources:
         lines += ["### Sources", "", *_bullets(report.sources), ""]
     return "\n".join(lines)
+
+
+def _cited_paragraph(report: AssessmentReport, p: CEOPitch) -> str:
+    """'Why we reached out', sentence by sentence, each with its footnote markers."""
+    if not report.trace:
+        return p.why_we_reached_out
+    lines = [n for n in report.trace.nodes if n.field == "why_we_reached_out"]
+    return " ".join(f"{n.label}{_marks(report, n.id)}" for n in lines) or p.why_we_reached_out
 
 
 def render_ceo_pitch_text(report: AssessmentReport) -> str:
