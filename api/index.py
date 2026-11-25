@@ -82,7 +82,23 @@ def report_payload(out_dir: Path) -> dict[str, Any]:
         "markdown": render_report_markdown(report),
         "pitch_text": render_ceo_pitch_text(report),
         "prototype_url": f"/api/examples/{out_dir.name}/prototype" if report.prototype_available else None,
+        "run_meta": _run_meta(out_dir),
     }
+
+
+RUN_META_KEYS = ("provider", "model", "builder_model", "started_at", "finished_at", "total_input_tokens",
+                 "total_output_tokens", "total_cost_usd", "search_providers_used", "elapsed_seconds", "stages",
+                 "research")
+
+
+def _run_meta(out_dir: Path) -> Optional[dict[str, Any]]:
+    """The run's provider, models, per-stage tokens and research stats, for the Run details popover."""
+    path = out_dir / "00_run_meta.json"
+    try:
+        meta = json.loads(path.read_text()) if path.exists() else None
+    except (ValueError, OSError):
+        return None
+    return {k: meta.get(k) for k in RUN_META_KEYS} if meta else None
 
 
 # --------------------------------------------------------------------------- read-only endpoints

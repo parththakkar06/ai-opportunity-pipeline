@@ -14,8 +14,8 @@ import re
 
 from agents.verifier import values
 from utils.schemas import (
-    AIOpportunities, AssessmentReport, BusinessChallenge, BusinessProfile, Citation, Fact, Trace, TraceEdge,
-    TraceNode, WinningStrategy,
+    AIOpportunities, AssessmentReport, BusinessChallenge, BusinessProfile, Citation, Fact, KeyMetric, Trace,
+    TraceEdge, TraceNode, WinningStrategy,
 )
 
 FACT_ID = re.compile(r"\b(S\d+\.F\d+|R\d+)\b")
@@ -189,6 +189,66 @@ def build_trace(report: AssessmentReport, profile: BusinessProfile, challenges: 
             n = cite(m.by_id[node.id].source_id)
             node.citations = [n] if n else []
 
+    metrics = _key_metrics(profile, m, cite)
+
     uncited = [nid for nid in factual if not nodes[nid].citations]
     ordered = [nodes[i] for i in order if i in nodes] + [n for n in nodes.values() if n.kind == "fact"]
-    return citations, Trace(nodes=ordered, edges=edges, uncited=uncited)
+    return citations, Trace(nodes=ordered, edges=edges, uncited=uncited), metrics
+
+
+_FIGURE = re.compile(r"[~≈]?\s*(?:[$₹€£]|Rs\.?\s?|INR\s?|USD\s?)?\d[\d,.]*\s*(?:%|crore|cr\b|lakh|mn\b|million|bn\b|"
+                     r"billion|[MBK]\b|sq\.?\s?ft|acres)?\+?", re.I)
+_PERIOD = re.compile(r"\b(?:[QH][1-4]\s*)?FY\s*'?\d{2,4}(?:\s*[-–/]\s*\d{2,4})?\b|\b20\d{2}\b", re.I)
+MAX_METRIC_CHARS = 22
+
+
+def _compact_metric(label: str, value: str) -> tuple[str, str]:
+    """'FY25 revenue ~$9M (estimated)' -> ('Revenue, FY25', '~$9M'). Short values are kept as written."""
+    if len(value) <= MAX_METRIC_CHARS:
+        return label, value
+    period = _PERIOD.search(value)
+    stripped = _PERIOD.sub(" ", value)
+    figure = next((m.group(0).strip() for m in _FIGURE.finditer(stripped) if re.search(r"\d", m.group(0))), None)
+    if not figure:
+        return label, ""                       # prose isn't a headline figure; the caller leaves it out
+    estimated = " (est.)" if re.search(r"estimat|approx|~|≈", value, re.I) and not figure.startswith(("~", "≈")) else ""
+    return (f"{label}, {period.group(0)}" if period else label), figure + estimated
+
+
+METRIC_LABELS = {"scale.revenue": "Revenue", "scale.projects_or_portfolio": "Portfolio", "scale.employees": "Employees"}
+MAX_METRICS = 5
+
+
+def _key_metrics(profile: BusinessProfile, m: _Matcher, cite) -> list[KeyMetric]:
+    """Headline figures for the metrics strip, each backed by current, dated facts (else left out)."""
+    evidence = {fe.field: fe.evidence for fe in profile.field_evidence}
+    candidates: list[tuple[str, str, str]] = []
+    for field, label in METRIC_LABELS.items():
+        value = getattr(profile.scale, field.split(".")[1])
+        if value:
+            candidates.append((field, label, value))
+    for i, value in enumerate(profile.scale.other_metrics):
+        candidates.append((f"scale.other_metrics[{i}]", "", value))
+    for leader in profile.leaders[:1]:
+        candidates.append(("leaders[0]", leader.role, leader.name))
+
+    out: list[KeyMetric] = []
+    for field, label, value in candidates:
+        ids = evidence.get(field) or (profile.leaders[0].evidence if field == "leaders[0]" else []) or m.find(value, 1)
+        facts = [m.by_id[i] for i in ids if i in m.by_id and not m.by_id[i].superseded_by and m.by_id[i].as_of]
+        if not facts:
+            continue
+        if not label:   # "~6,500 active patients" -> label "Active patients", value "~6,500"
+            match = re.match(r"^\s*([~≈<>]?\s*[$₹€£]?[\d.,]+\s*(?:%|crore|cr|lakh|mn|million|bn|billion|k)?\+?)\s*(.+)$",
+                             value, re.I)
+            label, value = (match.group(2).strip().capitalize(), match.group(1).strip()) if match else ("Metric", value)
+        if field != "leaders[0]":
+            label, value = _compact_metric(label, value)
+            if not value:
+                continue
+        newest = max(f.as_of for f in facts)
+        nums = [n for n in dict.fromkeys(cite(f.source_id) for f in facts) if n is not None]
+        out.append(KeyMetric(label=label, value=value, date=newest, facts=[f.fact_id for f in facts], citations=nums))
+        if len(out) == MAX_METRICS:
+            break
+    return out

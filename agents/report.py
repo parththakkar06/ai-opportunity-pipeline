@@ -177,10 +177,11 @@ def build_report(out_dir: Path) -> AssessmentReport:
         ceo_pitch=pitch,
         verification=verification,
         prototype_available=(out_dir / PROTOTYPE_HTML).exists(),
+        brand_color=profile.brand.primary_color_hex,
         assumptions=profile.assumptions,
         sources=profile.sources,
     )
-    report.citations, report.trace = build_trace(report, profile, challenges, opps, strategy)
+    report.citations, report.trace, report.key_metrics = build_trace(report, profile, challenges, opps, strategy)
     return report
 
 

@@ -574,6 +574,15 @@ class Trace(BaseModel):
     uncited: list[str] = Field(default_factory=list, description="Factual pitch lines with no resolvable source")
 
 
+class KeyMetric(BaseModel):
+    """A headline figure for the report's metrics strip: only shown when a dated fact backs it."""
+    label: str
+    value: str
+    date: Optional[str] = None
+    facts: list[str] = Field(default_factory=list)
+    citations: list[int] = Field(default_factory=list)
+
+
 class AssessmentReport(BaseModel):
     business_name: str
     slug: str
@@ -593,6 +602,8 @@ class AssessmentReport(BaseModel):
     sources: list[str] = Field(default_factory=list)
     citations: list[Citation] = Field(default_factory=list)
     trace: Optional[Trace] = None
+    key_metrics: list[KeyMetric] = Field(default_factory=list)
+    brand_color: Optional[str] = None
 
 
 class RunMeta(BaseModel):
