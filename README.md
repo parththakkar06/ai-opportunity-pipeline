@@ -119,6 +119,8 @@ Screenshots come from demo mode (`python scripts/screenshots.py` regenerates the
 A private Hugging Face Space runs the same app at one URL that only your team can open, redeployed from GitHub on every
 push to `main`, with finished reports saved to a private Dataset. Step-by-step: [docs/DEPLOY.md](docs/DEPLOY.md).
 
+Want the full app on one free public URL instead? [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md) runs it on Render, with live research.
+
 Prefer Vercel? A **read-only snapshot** of finished reports (no live runs), with every download:
 [docs/DEPLOY_VERCEL.md](docs/DEPLOY_VERCEL.md).
 

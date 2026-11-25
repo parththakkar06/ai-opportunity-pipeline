@@ -1,0 +1,19 @@
+# Render Blueprint: the whole app (UI + API + PDF export) as one free Docker web service.
+# Setup steps are in docs/DEPLOY_RENDER.md. The one `sync: false` value is asked for in the Render dashboard when
+# you create the service, so no secret is ever stored in this file or in the repo. Optional extras (TAVILY_API_KEY,
+# REPORTS_DATASET, HF_TOKEN) can be added later under the service's Environment tab.
+services:
+  - type: web
+    name: ai-opportunity-studio
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: LLM_PROVIDER
+        value: openrouter
+      - key: OPENROUTER_MODEL
+        value: google/gemma-4-31b-it:free
+      - key: OPENROUTER_API_KEY
+        sync: false

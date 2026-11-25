@@ -1,5 +1,5 @@
-# Hugging Face Space (Docker) image: FastAPI + the built React app + Chromium for PDF export.
-# Hugging Face runs the container as user 1000 and routes traffic to port 7860.
+# Hosting image (Hugging Face Space or Render): FastAPI + the built React app + Chromium for PDF export.
+# Hugging Face runs the container as user 1000 and routes traffic to port 7860; Render sets $PORT (10000 by default).
 
 # ---- 1. build the frontend
 FROM node:22-slim AS web
@@ -27,4 +27,5 @@ USER user
 
 ENV OUTPUTS_DIR=/app/outputs FRONTEND_DIST=/app/frontend/dist HOME=/home/user
 EXPOSE 7860
-CMD ["uvicorn", "api.index:app", "--host", "0.0.0.0", "--port", "7860", "--proxy-headers", "--forwarded-allow-ips", "*"]
+# Listen on the host's $PORT (Render), else 7860 (Hugging Face).
+CMD ["sh", "-c", "exec uvicorn api.index:app --host 0.0.0.0 --port ${PORT:-7860} --proxy-headers --forwarded-allow-ips '*'"]
