@@ -63,8 +63,7 @@ def test_legacy_and_unfinished_runs_are_left_out_unless_asked(tmp_path):
 def test_vercel_files_follow_the_rules():
     cfg = json.loads((ROOT / "frontend" / "vercel.json").read_text())
     assert cfg["buildCommand"] == "npm run build:static" and cfg["outputDirectory"] == "dist"
-    mw = (ROOT / "frontend" / "middleware.ts").read_text()
-    assert "SITE_PASSWORD" in mw and "401" in mw and "503" in mw       # asks for a password; locked if none is set
+    assert not (ROOT / "frontend" / "middleware.ts").exists()          # the site is deliberately open (no password)
     pkg = json.loads((ROOT / "frontend" / "package.json").read_text())
     assert pkg["scripts"]["build:static"] == "VITE_STATIC=1 npm run build"
     # the snapshot (binary PDFs) must never go into the Hugging Face Space repo or image

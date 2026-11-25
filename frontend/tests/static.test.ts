@@ -1,24 +1,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { checkBasicAuth } from '../src/lib/basicAuth.ts'
 import { gmailUrl, mailtoUrl } from '../src/lib/mail.ts'
 import { exportUrl } from '../src/lib/static.ts'
-
-const basic = (user: string, pass: string) => 'Basic ' + Buffer.from(`${user}:${pass}`).toString('base64')
-
-test('password check fails closed, then accepts only the right password', () => {
-  assert.equal(checkBasicAuth(basic('a', 'x'), undefined), 'unconfigured')
-  assert.equal(checkBasicAuth(basic('a', 'x'), ''), 'unconfigured')
-  assert.equal(checkBasicAuth(null, 'secret'), 'denied')
-  assert.equal(checkBasicAuth('Bearer abc', 'secret'), 'denied')
-  assert.equal(checkBasicAuth('Basic !!!not-base64!!!', 'secret'), 'denied')
-  assert.equal(checkBasicAuth(basic('anyone', 'wrong'), 'secret'), 'denied')
-  assert.equal(checkBasicAuth(basic('anyone', 'secret'), 'secret'), 'ok')          // any user name when none is required
-  assert.equal(checkBasicAuth(basic('team', 'secret'), 'secret', 'team'), 'ok')
-  assert.equal(checkBasicAuth(basic('other', 'secret'), 'secret', 'team'), 'denied')
-  assert.equal(checkBasicAuth(basic('u', 'pässwörd:with:colons'), 'pässwörd:with:colons'), 'ok')
-})
 
 test('export urls: files in static mode, API routes otherwise', () => {
   assert.equal(exportUrl('sobha', 'pitch.pdf', true), '/data/exports/sobha/pitch.pdf')

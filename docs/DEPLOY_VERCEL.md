@@ -1,13 +1,13 @@
 # Publishing a read-only snapshot on Vercel (free)
 
 A fast, always-on site with your finished reports, their cited sources and every download (one-page pitch PDF, full
-report PDF, deck, email draft, zip), behind a shared team password. **It is a snapshot: nobody can research a new
+report PDF, deck, email draft, zip). **It is a snapshot: nobody can research a new
 company on it.** For live runs, use the Hugging Face Space instead ([DEPLOY.md](DEPLOY.md)).
 
 ```
 your computer                         GitHub (private repo)                 Vercel (free)
 run companies locally  ──commit──▶   frontend/public/data/   ──push──▶   builds the static site
-python scripts/build_static.py       (reports + PDFs + decks)             password prompt, then the reports
+python scripts/build_static.py       (reports + PDFs + decks)             serves the reports
 ```
 
 ## What the team gets
@@ -29,30 +29,28 @@ python scripts/build_static.py       (reports + PDFs + decks)             passwo
 3. **Vercel:** sign up at vercel.com with your GitHub account (the free *Hobby* plan), then **Add New → Project** and import the repo.
    - **Root Directory:** `frontend`
    - Build settings come from `frontend/vercel.json` (it builds with `npm run build:static`), so leave the defaults.
-   - **Environment Variables:** add `SITE_PASSWORD` (the team password), for **all** environments.
-     Optionally add `SITE_USER` to require a specific user name; otherwise any user name works.
+   - No environment variables are needed.
    - Click **Deploy**.
-4. **Open the site.** The browser asks for a user name and password: use any user name (or `SITE_USER`) and your
-   `SITE_PASSWORD`. Share the URL and the password with the team.
+4. **Open the site** and share the URL with the team.
 
 ## Updating the reports
 Run a new company locally, run `python scripts/build_static.py`, commit `frontend/public/data`, and push. Vercel
 redeploys by itself.
 
-## How the password works, and its limits
-`frontend/middleware.ts` asks for the password before serving anything, including `/data` and the downloads. With no
-`SITE_PASSWORD` set it **refuses every request** instead of leaving the site open.
-- It's a shared password, so anyone who has it can share it. The Hugging Face private Space checks each person's
-  account instead.
-- Vercel's own protection for production sites is a paid feature (as I last knew; check their pricing page).
-- The middleware uses Vercel's Routing Middleware helper (`@vercel/functions`). It's covered by unit tests for the password
-  logic, but it couldn't be run end to end without Vercel, so **after your first deploy, open the site in a private window and
-  confirm it asks for the password.** If it doesn't, pause or delete the Vercel deployment straight away (Project → Settings) and tell me what you see.
+## Who can open it
+**Anyone who has the link.** There is no password: the site is a static snapshot, so there are no keys and no backend
+to abuse, and what it shows is research built from public sources. Every page is marked `noindex`, so search engines
+are asked not to list it, but a forwarded link works for anyone.
+- To limit access, use Vercel's own protection (Project → Settings → Deployment Protection; as I last knew, protecting a
+  production site is a paid feature, so check their pricing), or use the private Hugging Face Space ([DEPLOY.md](DEPLOY.md)),
+  which checks each person's account.
+- Keep the **GitHub repo private**: the reports are committed in it.
+- If you ever want a shared password back, add a Vercel Routing Middleware file that checks one (`frontend/middleware.ts`)
+  and set it as an environment variable.
 
 ## Troubleshooting
 | Symptom | Cause |
 |---|---|
-| "This site is locked: set SITE_PASSWORD" | The environment variable is missing for that environment; add it and redeploy |
 | Home page says "No reports have been published yet" | `frontend/public/data` wasn't committed, or the snapshot built zero runs |
 | Build fails | Check the root directory is `frontend`; the log shows which command failed |
 | A report is missing | It was legacy or unfinished; see the "skipped" lines when you run the builder |
@@ -62,4 +60,3 @@ redeploys by itself.
 ```bash
 cd frontend && npm run build:static && cd dist && python3 -m http.server 8040   # open http://localhost:8040
 ```
-(The password check only runs on Vercel.)
