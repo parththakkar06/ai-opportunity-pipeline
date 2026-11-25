@@ -14,6 +14,12 @@ FROM python:3.11-slim
 ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 WORKDIR /app
 
+# Playwright's bundled Node driver needs libatomic, which the slim image lacks ("libatomic.so.1: cannot open shared
+# object file"). It must be installed before `playwright install`, which then adds Chromium's own system libraries.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libatomic1 \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt requirements-space.txt ./
 RUN pip install -r requirements.txt -r requirements-space.txt \
     && playwright install --with-deps chromium \
