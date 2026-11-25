@@ -1,0 +1,44 @@
+{
+  "similarity": {
+    "overall": 0.081,
+    "per_company": {
+      "shivalik-group": 0.081,
+      "sobha": 0.081
+    },
+    "pairs": 42
+  },
+  "similarity_method": "TF-IDF cosine, no API calls",
+  "judge_model": null,
+  "runs": {
+    "shivalik-group": {
+      "pass_rate": null,
+      "claims": null,
+      "tokens_in": 54621,
+      "tokens_out": 50014,
+      "calls": null,
+      "seconds": null,
+      "citations": 0,
+      "uncited": 7,
+      "legacy": true,
+      "judge": null,
+      "judge_score": null
+    },
+    "sobha": {
+      "pass_rate": null,
+      "claims": null,
+      "tokens_in": 54255,
+      "tokens_out": 53738,
+      "calls": null,
+      "seconds": null,
+      "citations": 0,
+      "uncited": 7,
+      "legacy": true,
+      "judge": null,
+      "judge_score": null
+    }
+  },
+  "judge_tokens": {
+    "input": 0,
+    "output": 0
+  }
+}
