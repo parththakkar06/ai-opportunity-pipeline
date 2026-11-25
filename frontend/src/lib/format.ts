@@ -19,12 +19,17 @@ export function relativeTime(iso: string | null): string {
   return 'just now'
 }
 
-/** "Prestige Group" → "PG", "Sobha" → "SO". */
-export function initials(name: string): string {
-  const words = name.replace(/[^\p{L}\p{N} ]/gu, ' ').trim().split(/\s+/).filter(Boolean)
-  if (words.length === 0) return '?'
-  if (words.length === 1) return words[0].slice(0, 2).toUpperCase()
-  return (words[0][0] + words[1][0]).toUpperCase()
+/** "2026-11-25T07:00:00+00:00" -> "25 Nov 2026". */
+export function shortDate(iso: string | null | undefined): string {
+  if (!iso) return ''
+  const d = new Date(iso.length === 10 ? `${iso}T00:00:00` : iso)
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+/** 54321 -> "54.3k". */
+export function compact(n: number | null | undefined): string {
+  if (n == null) return '—'
+  return n >= 1000 ? `${(n / 1000).toFixed(n >= 100_000 ? 0 : 1)}k` : String(n)
 }
 
 /** "https://www.Sobha.com/about" → "sobha.com/about"; empty input stays empty. */

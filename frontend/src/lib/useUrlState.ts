@@ -1,46 +1,54 @@
 import { useCallback, useEffect, useState } from 'react'
 
-export const REPORT_TABS = ['overview', 'key-info', 'challenges', 'opportunities', 'pitch'] as const
-export type ReportTab = (typeof REPORT_TABS)[number]
+// The URL is the source of truth: ?run=<slug> opens a report, ?view=how-it-works opens the pipeline map,
+// and #section anchors point inside a report (the table of contents keeps them current). Old ?tab= links
+// from the tabbed design are rewritten to the matching #section on load.
 
+export type View = 'home' | 'report' | 'how-it-works'
 export interface UrlState {
   run: string | null
-  tab: ReportTab
+  view: View
 }
 
 const SLUG = /^[a-z0-9][a-z0-9-]{0,120}$/
+const LEGACY_TABS: Record<string, string> = {
+  overview: 'overview',
+  'key-info': 'key-information',
+  challenges: 'challenges',
+  opportunities: 'opportunities',
+  pitch: 'ceo-pitch',
+}
 
 function read(): UrlState {
   const params = new URLSearchParams(window.location.search)
   const run = params.get('run')
-  const tab = params.get('tab') as ReportTab | null
-  return {
-    run: run && SLUG.test(run) ? run : null,
-    tab: tab && REPORT_TABS.includes(tab) ? tab : 'overview',
-  }
+  const valid = run && SLUG.test(run) ? run : null
+  if (params.get('view') === 'how-it-works') return { run: null, view: 'how-it-works' }
+  return { run: valid, view: valid ? 'report' : 'home' }
 }
 
-function write(state: UrlState, mode: 'push' | 'replace') {
+function migrateLegacyTab() {
   const params = new URLSearchParams(window.location.search)
-  if (state.run) params.set('run', state.run)
-  else params.delete('run')
-  if (state.run && state.tab !== 'overview') params.set('tab', state.tab)
-  else params.delete('tab')
-  // Section-level filters (e.g. ?cat= on Challenges) belong to one tab of one report.
-  if (!state.run || state.tab !== 'challenges') params.delete('cat')
-  const query = params.toString()
-  const url = `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`
-  if (url === `${window.location.pathname}${window.location.search}${window.location.hash}`) return
-  window.history[mode === 'push' ? 'pushState' : 'replaceState'](null, '', url)
+  const tab = params.get('tab')
+  if (!tab) return
+  params.delete('tab')
+  const hash = LEGACY_TABS[tab] ? `#${LEGACY_TABS[tab]}` : window.location.hash
+  window.history.replaceState(null, '', `${window.location.pathname}${params.size ? `?${params}` : ''}${hash}`)
 }
 
-/**
- * Keeps the open report and tab in the URL (?run=sobha&tab=challenges), so links can be shared and
- * Back/Forward work. Opening a different report adds a history entry. Switching tabs replaces the
- * current entry, so Back doesn't step through every tab click.
- */
+function urlFor(state: UrlState, keepHash: boolean): string {
+  const params = new URLSearchParams()
+  if (state.view === 'how-it-works') params.set('view', 'how-it-works')
+  else if (state.run) params.set('run', state.run)
+  const query = params.toString()
+  return `${window.location.pathname}${query ? `?${query}` : ''}${keepHash ? window.location.hash : ''}`
+}
+
 export function useUrlState() {
-  const [state, setState] = useState<UrlState>(read)
+  const [state, setState] = useState<UrlState>(() => {
+    migrateLegacyTab()
+    return read()
+  })
 
   useEffect(() => {
     const onPop = () => setState(read())
@@ -48,24 +56,17 @@ export function useUrlState() {
     return () => window.removeEventListener('popstate', onPop)
   }, [])
 
-  const openRun = useCallback((run: string | null, tab: ReportTab = 'overview') => {
-    const next = { run, tab }
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('run') !== run) {
-      params.delete('cat')
-      window.history.replaceState(window.history.state, '', `${window.location.pathname}?${params}`)
+  const go = useCallback((next: UrlState) => {
+    const url = urlFor(next, false)
+    if (url !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
+      window.history.pushState(null, '', url)
     }
-    write(next, 'push')
     setState(next)
+    window.scrollTo({ top: 0 })
   }, [])
 
-  const setTab = useCallback((tab: ReportTab) => {
-    setState((prev) => {
-      const next = { ...prev, tab }
-      write(next, 'replace')
-      return next
-    })
-  }, [])
-
-  return { ...state, openRun, setTab }
+  const openRun = useCallback((run: string) => go({ run, view: 'report' }), [go])
+  const goHome = useCallback(() => go({ run: null, view: 'home' }), [go])
+  const openHowItWorks = useCallback(() => go({ run: null, view: 'how-it-works' }), [go])
+  return { ...state, openRun, goHome, openHowItWorks }
 }

@@ -1,337 +1,310 @@
 @import "tailwindcss";
 
 /*
- * Design tokens: design-system/ai-opportunity-studio/MASTER.md (UI/UX Pro Max, "Trust & Authority",
- * "Accessible & Ethical"). Components use only these semantic names, never raw hex values or the slate,
- * indigo, etc. palettes. The light values come from the design system. The skill gave no dark values,
- * so the dark theme below is my own, with every text pair checked for at least 4.5:1 contrast.
+ * Design tokens: docs/DESIGN_DIRECTION.md. A warm "paper" theme with near-black ink, one neutral grey
+ * scale and a single brand colour. Components use only these semantic names. The shadcn names
+ * (background, primary, muted, accent, border, input, ring…) are aliases, so shadcn components in
+ * components/ui/ work unchanged. Note: shadcn's "accent" is a hover surface; our brand colour is "brand".
  */
 
-/* Dark mode follows data-theme on <html>, which index.html sets from the saved choice or the system. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Newsreader Variable", "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-  /* Surfaces & text */
-  --color-background: #f8fafc;
-  --color-foreground: #020617;
-  --color-card: #ffffff;
-  --color-card-foreground: #020617;
-  --color-subtle: #f1f5f9;
-  --color-muted: #e8ecf1;
-  --color-muted-foreground: #475569;
-  --color-secondary: #334155;
-  --color-border: #e2e8f0;
-  --color-border-strong: #cbd5e1;
+  /* Paper palette (light). Contrast on --paper: ink 17.0, ink-2 9.9, ink-3 5.7, brand fallback 10.7. */
+  --color-paper: #fbfaf7;
+  --color-sheet: #ffffff;
+  --color-tint: #f3f1ec;
+  --color-ink: #17181a;
+  --color-ink-2: #3e4046;
+  --color-ink-3: #61646b;
+  --color-rule: #e6e2da;
+  --color-rule-strong: #cfcac0;
+  --color-brand: var(--brand, #1f3a6e);
+  --color-on-brand: #ffffff;
+  --color-positive: #2e6b3b;
+  --color-caution: #8a5300;
+  --color-negative: #a3322a;
 
-  /* Primary (navy) for headings, the active tab, and strong surfaces */
-  --color-primary: #0f172a;
-  --color-on-primary: #ffffff;
+  /* shadcn aliases */
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink);
+  --color-card: var(--color-sheet);
+  --color-card-foreground: var(--color-ink);
+  --color-popover: var(--color-sheet);
+  --color-popover-foreground: var(--color-ink);
+  --color-primary: var(--color-brand);
+  --color-primary-foreground: var(--color-on-brand);
+  --color-secondary: var(--color-tint);
+  --color-secondary-foreground: var(--color-ink);
+  --color-muted: var(--color-tint);
+  --color-muted-foreground: var(--color-ink-3);
+  --color-accent: var(--color-tint);
+  --color-accent-foreground: var(--color-ink);
+  --color-destructive: var(--color-negative);
+  --color-destructive-foreground: #ffffff;
+  --color-border: var(--color-rule);
+  --color-input: var(--color-rule-strong);
+  --color-ring: var(--color-brand);
 
-  /* The single accent (trust blue): CTAs, links, the active stage */
-  --color-accent: #0369a1;
-  --color-accent-hover: #075985;
-  --color-on-accent: #ffffff;
-  --color-accent-soft: #e0f2fe;
-  --color-accent-soft-foreground: #075985;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 4px;
 
-  --color-ring: #0f172a;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 
-  /* Status colors, always paired with an icon or text label, never color alone */
-  --color-success: #047857;
-  --color-success-soft: #ecfdf5;
-  --color-success-foreground: #065f46;
-  --color-warning: #b45309;
-  --color-warning-soft: #fffbeb;
-  --color-warning-foreground: #92400e;
-  --color-danger: #dc2626;
-  --color-danger-soft: #fef2f2;
-  --color-danger-foreground: #b91c1c;
-
-  /* Motion tokens (shared rhythm; exits are about 65% of entries) */
-  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-in-soft: cubic-bezier(0.64, 0, 0.78, 0);
+  --shadow-float: 0 1px 2px rgb(0 0 0 / 0.06), 0 8px 24px rgb(0 0 0 / 0.08);
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --color-background: #020617;
-  --color-foreground: #f8fafc;
-  --color-card: #0f172a;
-  --color-card-foreground: #f8fafc;
-  --color-subtle: #111c31;
-  --color-muted: #1e293b;
-  --color-muted-foreground: #a3b1c6;
-  --color-secondary: #cbd5e1;
-  --color-border: #1e293b;
-  --color-border-strong: #334155;
+  --color-paper: #151518;
+  --color-sheet: #1d1d21;
+  --color-tint: #232328;
+  --color-ink: #eceae4;
+  --color-ink-2: #c9c6bf;
+  --color-ink-3: #9e9b94;
+  --color-rule: #2a2a2f;
+  --color-rule-strong: #3a3a40;
+  --color-brand: var(--brand-dark, #8fb0e8);
+  --color-on-brand: #10131a;
+  --color-positive: #7fc08c;
+  --color-caution: #e2b15c;
+  --color-negative: #ee8a80;
+  --shadow-float: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px rgb(0 0 0 / 0.5);
+}
 
-  --color-primary: #e2e8f0;
-  --color-on-primary: #0f172a;
-
-  --color-accent: #38bdf8;
-  --color-accent-hover: #7dd3fc;
-  --color-on-accent: #082f49;
-  --color-accent-soft: #0c2a43;
-  --color-accent-soft-foreground: #bae6fd;
-
-  --color-ring: #7dd3fc;
-
-  --color-success: #34d399;
-  --color-success-soft: #062b23;
-  --color-success-foreground: #6ee7b7;
-  --color-warning: #fbbf24;
-  --color-warning-soft: #2e1a04;
-  --color-warning-foreground: #fcd34d;
-  --color-danger: #f87171;
-  --color-danger-soft: #2f0b0b;
-  --color-danger-foreground: #fca5a5;
+@media (prefers-contrast: more) {
+  :root {
+    --color-rule: var(--color-rule-strong);
+  }
 }
 
 :root {
   color-scheme: light;
 }
 
-html,
-body {
-  background: var(--color-background);
-  color: var(--color-foreground);
+html {
+  scroll-padding-top: 5rem; /* the 56px nav never covers a focused element or an anchor target */
+  scroll-behavior: smooth;
+}
+/* Below 1100px a sticky "Contents" bar sits under the nav, so anchors need more room. */
+@media (max-width: 1099px) {
+  html {
+    scroll-padding-top: 7.5rem;
+  }
 }
 
-/* The sticky top bar (64px) plus the report tab bar must never cover an element that receives focus. */
-html {
-  scroll-padding-top: 9rem;
+html,
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv11", "ss01";
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
 }
 
 a,
 button,
 summary,
 input,
-select,
-label,
-[role="tab"] {
+label {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
-body {
-  margin: 0;
-  font-size: 1rem;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+button:not(:disabled),
+[role="button"],
+summary,
+[role="menuitem"],
+label:has(input[type="checkbox"]) {
+  cursor: pointer;
 }
 
-h1,
-h2,
-h3,
-h4 {
-  line-height: 1.2;
-  text-wrap: balance;
-}
-
-/* One visible focus style everywhere (3px, never removed). Mouse clicks don't trigger it. */
+/* One focus style everywhere: 2px brand ring, 2px offset. Never removed; mouse clicks don't trigger it. */
 :focus-visible {
-  outline: 3px solid var(--color-ring);
+  outline: 2px solid var(--color-brand);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 2px;
 }
-/* Headings and regions that only receive focus from code (tabindex="-1") don't need a ring. */
 [tabindex="-1"]:focus,
 [tabindex="-1"]:focus-visible {
   outline: none;
 }
 
-button:not(:disabled),
-[role="button"]:not([aria-disabled="true"]),
-[role="tab"],
-summary,
-label:has(input[type="checkbox"]) {
-  cursor: pointer;
+@layer components {
+  /* Serif display and reading text with optical sizing and size-specific tracking. */
+  .display {
+    font-family: var(--font-serif);
+    font-optical-sizing: auto;
+    letter-spacing: -0.02em;
+    line-height: 1.08;
+    font-weight: 560;
+  }
+  .heading {
+    font-family: var(--font-serif);
+    font-optical-sizing: auto;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+    font-weight: 560;
+  }
+  .prose-serif {
+    font-family: var(--font-serif);
+    font-optical-sizing: auto;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    max-width: 72ch;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  .meta {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--color-ink-3);
+  }
+  /* Press feedback for anything pressable (emil-design-eng): instant, subtle. */
+  .pressable {
+    transition: transform 120ms var(--ease-out), background-color 150ms ease, color 150ms ease;
+  }
+  .pressable:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  /* Floating layers: fade + scale from the trigger. Exit is faster than entry. */
+  .float-in {
+    transform-origin: var(--origin, top right);
+    animation: float-in 160ms var(--ease-out);
+  }
+  .rise-in {
+    animation: rise-in 150ms ease-out;
+  }
+  /* Side sheet: in from the right, out to the right (spatial consistency). */
+  .sheet-in {
+    animation: sheet-in 240ms var(--ease-drawer);
+  }
+}
+
+@keyframes float-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+@keyframes sheet-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes pulse-dot {
+  50% {
+    opacity: 0.35;
+  }
 }
 
 .skip-link {
   position: absolute;
   left: 1rem;
   top: -100px;
-  z-index: 50;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  background: var(--color-primary);
-  color: var(--color-on-primary);
+  z-index: 60;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  background: var(--color-ink);
+  color: var(--color-paper);
   font-weight: 600;
 }
 .skip-link:focus {
-  top: 1rem;
+  top: 0.75rem;
 }
 
-/* framer-motion honours reduced motion through MotionConfig; this covers CSS transitions and spinners. */
+/* Reduced motion: no movement, short fades only, no pulsing. */
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
+    animation-duration: 120ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+    transition-duration: 0ms !important;
+  }
+  .float-in,
+  .sheet-in {
+    animation-name: rise-in !important;
   }
 }
 
-/* ------------------------------------------------------------------------------------------- print / PDF
- * Printing (or "Save as PDF") produces a clean document: no app chrome, light theme regardless of the
- * on-screen theme, A4 margins, and sections that never split across pages. On the CEO Pitch tab only
- * the one-page pitch prints (plus the outreach kit if "Include email & elevator pitch" is ticked).
+/* --------------------------------------------------------------------------------------- print
+ * Printing the report gives a clean document: no app chrome, light paper, sections kept whole.
+ * (The one-page pitch has its own exact PDF export, so it isn't laid out here.)
  */
 @page {
   size: A4;
-  margin: 12mm 15mm 12mm;
+  margin: 16mm 15mm;
 }
 
 @media print {
   :root,
   [data-theme="dark"] {
     color-scheme: light;
-    --color-background: #ffffff;
-    --color-foreground: #000000;
-    --color-card: #ffffff;
-    --color-card-foreground: #000000;
-    --color-subtle: #f4f6f8;
-    --color-muted: #e8ecf1;
-    --color-muted-foreground: #3f4a5a;
-    --color-secondary: #1e293b;
-    --color-border: #d7dde5;
-    --color-border-strong: #b8c2cf;
-    --color-primary: #0f172a;
-    --color-on-primary: #ffffff;
-    --color-accent: #0369a1;
-    --color-on-accent: #ffffff;
-    --color-accent-soft: #eef7fd;
-    --color-accent-soft-foreground: #075985;
-    --color-success: #047857;
-    --color-success-soft: #f0fbf6;
-    --color-success-foreground: #065f46;
-    --color-warning-soft: #fffbeb;
-    --color-warning-foreground: #92400e;
-    --color-danger-soft: #fef2f2;
-    --color-danger-foreground: #b91c1c;
+    --color-paper: #ffffff;
+    --color-sheet: #ffffff;
+    --color-tint: #f5f4f0;
+    --color-ink: #000000;
+    --color-ink-2: #222222;
+    --color-ink-3: #555555;
+    --color-rule: #dddddd;
+    --color-brand: var(--brand, #1f3a6e);
   }
-
   html {
     scroll-padding-top: 0;
   }
-  html,
   body {
-    background: #fff !important;
-    color: #000;
-    font-size: 10.5pt;
+    font-size: 10pt;
   }
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-    transition: none !important;
-    box-shadow: none !important;
-    text-shadow: none !important;
-  }
-
   .no-print,
   .skip-link {
     display: none !important;
   }
-  /* 100vh wrappers equal a full page in print and push a blank page onto the end. */
-  .min-h-screen {
-    min-height: 0 !important;
-  }
-  .print-reset {
+  .print-full {
     display: block !important;
     max-width: none !important;
     margin: 0 !important;
     padding: 0 !important;
   }
-  /* framer-motion may have left a mid-animation inline style; printed content is always fully visible. */
-  [style*="opacity"] {
-    opacity: 1 !important;
+  section,
+  tr,
+  li {
+    break-inside: avoid;
   }
-  [style*="transform"] {
-    transform: none !important;
-  }
-
-  /* On the pitch tab, the pitch page is the whole document. */
-  [data-print-mode="pitch"] .print-hide-on-pitch {
-    display: none !important;
-  }
-  [data-print-mode="pitch"]:not([data-print-kit="true"]) .print-kit {
-    display: none !important;
-  }
-  .print-kit {
-    break-before: page;
-  }
-  #ceo-pitch-page {
-    max-width: none !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-  /* Compact typography so the pitch fits one A4 page; only individual items avoid breaking. */
-  #ceo-pitch-page .text-base {
-    font-size: 9.5pt !important;
-    line-height: 1.36 !important;
-  }
-  #ceo-pitch-page .text-sm {
-    font-size: 8.5pt !important;
-    line-height: 1.35 !important;
-  }
-  #ceo-pitch-page h2 {
-    font-size: 17pt !important;
-    line-height: 1.15 !important;
-    margin-top: 2pt !important;
-  }
-  #ceo-pitch-page section {
-    margin-top: 9pt !important;
-    break-inside: auto;
-  }
-  #ceo-pitch-page section > div {
-    margin-top: 5pt !important;
-  }
-  #ceo-pitch-page ol > li + li,
-  #ceo-pitch-page ul > li + li {
-    margin-top: 4pt !important;
-  }
-  #ceo-pitch-page dl {
-    margin-top: 2pt !important;
-  }
-  #ceo-pitch-page .mt-1 {
-    margin-top: 1pt !important;
-  }
-  #ceo-pitch-page .mt-8,
-  #ceo-pitch-page .mt-6,
-  #ceo-pitch-page .mt-10 {
-    margin-top: 9pt !important;
-  }
-  #ceo-pitch-page .p-4 {
-    padding: 6pt 9pt !important;
-  }
-
   h1,
   h2,
-  h3,
-  h4 {
+  h3 {
     break-after: avoid;
-  }
-  /* Keep small blocks whole; long cards may flow across pages instead of leaving large gaps. */
-  .rounded-xl,
-  tr,
-  #ceo-pitch-page li,
-  #ceo-pitch-page > p {
-    break-inside: avoid;
   }
   a {
     color: inherit !important;
     text-decoration: none !important;
-  }
-  details > :not(summary) {
-    display: block !important;
   }
 }

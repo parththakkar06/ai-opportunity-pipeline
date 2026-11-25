@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 
-/** Live media-query match, e.g. useMediaQuery('(min-width: 1024px)'). */
+/** Live media-query match, e.g. useMediaQuery('(min-width: 1100px)'). */
 export function useMediaQuery(query: string): boolean {
   return useSyncExternalStore(
     (onChange) => {
@@ -13,5 +13,5 @@ export function useMediaQuery(query: string): boolean {
   )
 }
 
-/** Matches Tailwind's `lg` breakpoint, where the left rail appears. */
-export const useIsDesktop = () => useMediaQuery('(min-width: 1024px)')
+/** Wide enough for the sticky table of contents beside the report. */
+export const useIsDesktop = () => useMediaQuery('(min-width: 1100px)')
