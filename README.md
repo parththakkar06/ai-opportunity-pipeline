@@ -121,8 +121,8 @@ push to `main`, with finished reports saved to a private Dataset. Step-by-step: 
 
 Want the full app on one free public URL instead? [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md) runs it on Render, with live research.
 
-Prefer Vercel? A **read-only snapshot** of finished reports (no live runs), with every download:
-[docs/DEPLOY_VERCEL.md](docs/DEPLOY_VERCEL.md).
+Vercel as the interface for that Render backend (live research, no password): [docs/DEPLOY_VERCEL.md](docs/DEPLOY_VERCEL.md).
+It also explains an optional read-only snapshot with no backend.
 
 ## Web app API
 

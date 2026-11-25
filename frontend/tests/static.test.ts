@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import { gmailUrl, mailtoUrl } from '../src/lib/mail.ts'
-import { exportUrl } from '../src/lib/static.ts'
+import { apiUrl, exportUrl } from '../src/lib/static.ts'
 
 test('export urls: files in static mode, API routes otherwise', () => {
   assert.equal(exportUrl('sobha', 'pitch.pdf', true), '/data/exports/sobha/pitch.pdf')
@@ -27,4 +27,14 @@ test('mailto stays under the length limit, cutting at a sentence when needed', (
   assert.ok(long.cut && long.url.length <= 1800 && long.url.startsWith('mailto:a@b.co?'))
   assert.ok(decodeURIComponent(long.url).includes('attached one-page PDF'))
   assert.ok(mailtoUrl('Hello', 'No recipient.').url.startsWith('mailto:?subject='))
+})
+
+test('api base: same site by default, a full address when the front end is hosted separately', () => {
+  assert.equal(apiUrl('/api/health', ''), '/api/health')
+  assert.equal(apiUrl('/api/health', 'https://my-app.onrender.com'), 'https://my-app.onrender.com/api/health')
+  assert.equal(exportUrl('sobha', 'pitch.pdf', false, 'https://my-app.onrender.com'),
+    'https://my-app.onrender.com/api/examples/sobha/export/pitch.pdf')
+  assert.equal(exportUrl('sobha', 'email', false, ''), '/api/examples/sobha/export/email')
+  // the static snapshot never talks to the API, whatever the base is
+  assert.equal(exportUrl('sobha', 'zip', true, 'https://my-app.onrender.com'), '/data/exports/sobha/exports.zip')
 })

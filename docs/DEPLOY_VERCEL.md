@@ -1,62 +1,46 @@
-# Publishing a read-only snapshot on Vercel (free)
+# Vercel front end (free)
 
-A fast, always-on site with your finished reports, their cited sources and every download (one-page pitch PDF, full
-report PDF, deck, email draft, zip). **It is a snapshot: nobody can research a new
-company on it.** For live runs, use the Hugging Face Space instead ([DEPLOY.md](DEPLOY.md)).
+The Vercel site is the **live app's interface**: it calls the backend you run on Render
+([DEPLOY_RENDER.md](DEPLOY_RENDER.md)) for research, saved reports and every export. There is no password.
 
 ```
-your computer                         GitHub (private repo)                 Vercel (free)
-run companies locally  ──commit──▶   frontend/public/data/   ──push──▶   builds the static site
-python scripts/build_static.py       (reports + PDFs + decks)             serves the reports
+Vercel (this site)  ──── API calls ────▶  Render (backend: research, reports, PDFs)
+React interface                            FastAPI + Chromium, public
 ```
 
-## What the team gets
-- The same interface as the live app: report, Trace panel, A4 pitch preview, Export menu.
-- Downloads of the files built ahead of time. The email draft works with Gmail, the Mail app and Copy; the `.eml`
-  file has no recipient (the live app can set one, a static site can't).
-- No typing a new company: the home page lists the published reports instead.
+The two are separate sites, so Vercel must be told where the backend is, and the backend must allow calls from it
+(`render.yaml` already sets `CORS_ORIGINS=*`; the API is public and uses no cookies).
 
-## One-time setup (about 10 minutes)
+## Setup (about 5 minutes)
 
-1. **Make the snapshot** on your computer, after running the companies you want to share:
-   ```bash
-   python scripts/build_static.py
-   ```
-   It bakes every *current, finished* run in `outputs/` into `frontend/public/data/`. Runs saved before the fact checks
-   ("legacy") and unfinished runs are skipped unless you add `--include-legacy`; use `--only sobha,adani-realty` to pick runs.
-   Needs Chrome installed (the PDFs are built with it). **Read the reports before sharing them.**
-2. **Commit and push** `frontend/public/data` to GitHub. Keep the repo **private**, since the research is in it.
-3. **Vercel:** sign up at vercel.com with your GitHub account (the free *Hobby* plan), then **Add New → Project** and import the repo.
-   - **Root Directory:** `frontend`
-   - Build settings come from `frontend/vercel.json` (it builds with `npm run build:static`), so leave the defaults.
-   - No environment variables are needed.
-   - Click **Deploy**.
-4. **Open the site** and share the URL with the team.
+1. **Backend first.** Deploy Render and note its address, for example `https://ai-opportunity-studio.onrender.com`.
+2. **Vercel → your project → Settings → Environment Variables:** add
+   - **Name:** `VITE_API_BASE`
+   - **Value:** the Render address, with `https://` and no trailing slash
+   - **Environments:** Production and Preview
+3. **Redeploy** (Deployments → the latest → Redeploy). The address is baked in at build time, so changing it needs a new build.
+4. Open the Vercel site. The home page should show "Research a company" and your saved reports.
 
-## Updating the reports
-Run a new company locally, run `python scripts/build_static.py`, commit `frontend/public/data`, and push. Vercel
-redeploys by itself.
+Build settings come from `frontend/vercel.json` (`npm run build`, output `dist`); the Root Directory is `frontend`.
 
-## Who can open it
-**Anyone who has the link.** There is no password: the site is a static snapshot, so there are no keys and no backend
-to abuse, and what it shows is research built from public sources. Every page is marked `noindex`, so search engines
-are asked not to list it, but a forwarded link works for anyone.
-- To limit access, use Vercel's own protection (Project → Settings → Deployment Protection; as I last knew, protecting a
-  production site is a paid feature, so check their pricing), or use the private Hugging Face Space ([DEPLOY.md](DEPLOY.md)),
-  which checks each person's account.
-- Keep the **GitHub repo private**: the reports are committed in it.
-- If you ever want a shared password back, add a Vercel Routing Middleware file that checks one (`frontend/middleware.ts`)
-  and set it as an environment variable.
+## What to expect
+- **The first load can take up to a minute.** The free Render service sleeps when idle; the site says "Waking the server…"
+  after 5 seconds, then continues by itself.
+- **Everything works as on Render:** live research, the Trace panel, the A4 pitch preview, and downloads (the PDFs, deck
+  and zip are served by Render, so they inherit its limits: see DEPLOY_RENDER.md).
+- **Saved reports** live on the Render service and reset when it restarts, unless you've set up the Dataset persistence.
+- **Anyone with the link can use it**, and runs spend your model key's quota. Keep to a free-tier key.
 
 ## Troubleshooting
 | Symptom | Cause |
 |---|---|
-| Home page says "No reports have been published yet" | `frontend/public/data` wasn't committed, or the snapshot built zero runs |
-| Build fails | Check the root directory is `frontend`; the log shows which command failed |
-| A report is missing | It was legacy or unfinished; see the "skipped" lines when you run the builder |
-| A download 404s | Rebuild the snapshot, then commit everything under `frontend/public/data` |
+| "Can't reach the API" with `http://localhost…` or nothing shown | `VITE_API_BASE` isn't set, or it was added after the last build: set it, then redeploy |
+| "Can't reach the server at https://…onrender.com" | The Render service is asleep (wait a minute and reload), stopped, or the address is wrong |
+| Page loads but the browser console shows a CORS error | Render isn't running the latest `render.yaml` (`CORS_ORIGINS`); redeploy Render |
+| Research form missing, "read-only snapshot" text | The build used `build:static`; Vercel should use `npm run build` (see `vercel.json`) |
 
-## Check it locally first (optional)
-```bash
-cd frontend && npm run build:static && cd dist && python3 -m http.server 8040   # open http://localhost:8040
-```
+## Optional: a static, read-only snapshot instead
+If you'd rather have a fast site with no backend, `python scripts/build_static.py` bakes your current, finished reports
+into `frontend/public/data`, and building with `npm run build:static` serves only those (no research, no waking up).
+To use it on Vercel, set the build command to `npm run build:static` in the project's settings. The reports are then in
+the repo, so keep it private.

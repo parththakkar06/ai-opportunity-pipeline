@@ -62,7 +62,7 @@ def test_legacy_and_unfinished_runs_are_left_out_unless_asked(tmp_path):
 
 def test_vercel_files_follow_the_rules():
     cfg = json.loads((ROOT / "frontend" / "vercel.json").read_text())
-    assert cfg["buildCommand"] == "npm run build:static" and cfg["outputDirectory"] == "dist"
+    assert cfg["buildCommand"] == "npm run build" and cfg["outputDirectory"] == "dist"   # live app; build:static is the snapshot
     assert not (ROOT / "frontend" / "middleware.ts").exists()          # the site is deliberately open (no password)
     pkg = json.loads((ROOT / "frontend" / "package.json").read_text())
     assert pkg["scripts"]["build:static"] == "VITE_STATIC=1 npm run build"

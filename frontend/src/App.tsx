@@ -5,6 +5,7 @@ import { Intake } from '@/components/intake/Intake'
 import { applyEvent, initialProgress, type RunState } from '@/components/run/progress'
 import { Nav, RunDetails } from '@/components/shell/Nav'
 import { useToast } from '@/components/shell/Toast'
+import { API_BASE } from '@/lib/static'
 import { useUrlState } from '@/lib/useUrlState'
 import type { Health, ReportPayload, SavedRun, StreamEvent } from '@/types'
 
@@ -27,6 +28,7 @@ const EmailSheet = lazy(() => import('@/components/report/ExportMenu').then((m) 
 export default function App() {
   const [health, setHealth] = useState<Health | null>(null)
   const [backendDown, setBackendDown] = useState(false)
+  const [waking, setWaking] = useState(false)
   const [runs, setRuns] = useState<SavedRun[]>([])
   const [runsLoading, setRunsLoading] = useState(true)
   const [payload, setPayload] = useState<ReportPayload | null>(null)
@@ -49,6 +51,13 @@ export default function App() {
       setRunsLoading(false)
     }
   }, [])
+
+  // A free host sleeps when idle, so the first request can take up to a minute: say so instead of looking broken.
+  useEffect(() => {
+    if (!runsLoading) return setWaking(false)
+    const t = window.setTimeout(() => setWaking(true), 5000)
+    return () => window.clearTimeout(t)
+  }, [runsLoading])
 
   useEffect(() => {
     fetchHealth()
@@ -143,9 +152,23 @@ export default function App() {
 
   const notice = (
     <>
+      {waking && !backendDown && (
+        <p role="status" className="border-l-2 border-caution py-1 pl-3 text-sm text-ink">
+          Waking the server. It sleeps when idle on the free plan, so the first load can take up to a minute.
+        </p>
+      )}
       {backendDown && (
         <p role="alert" className="border-l-2 border-negative py-1 pl-3 text-sm text-ink">
-          Can't reach the API. Start it with <code className="font-mono text-[13px]">uvicorn api.index:app --port 8000</code>.
+          {API_BASE ? (
+            <>
+              Can't reach the server at <code className="font-mono text-[13px]">{API_BASE}</code>. If it's on a free plan
+              it may still be waking up: try again in a minute.
+            </>
+          ) : (
+            <>
+              Can't reach the API. Start it with <code className="font-mono text-[13px]">uvicorn api.index:app --port 8000</code>.
+            </>
+          )}
         </p>
       )}
       {health?.status === 'config_error' && (
