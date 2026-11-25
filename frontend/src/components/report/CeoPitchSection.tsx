@@ -56,7 +56,18 @@ export function CeoPitchSection({ report, entrance, onPrint, onCopy, copied, inc
           aria-labelledby="ceo-pitch-title"
           className="mx-auto max-w-[46rem] rounded-2xl border border-border bg-card px-6 py-8 shadow-sm sm:px-12 sm:py-12"
         >
-          <p className="text-xs font-semibold tracking-widest text-accent uppercase">One-page executive pitch</p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold tracking-widest text-accent uppercase">One-page executive pitch</p>
+            {report.verification && report.verification.pass_rate !== null ? (
+              <span
+                className="rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-secondary"
+                title={report.verification.actions.join('\n') || 'Every factual claim matched the evidence'}
+              >
+                Verified {report.verification.supported}/{report.verification.checked} claims (
+                {Math.round(report.verification.pass_rate * 100)}%)
+              </span>
+            ) : null}
+          </div>
           <h2 id="ceo-pitch-title" className="mt-2 text-2xl leading-tight font-bold text-foreground sm:text-3xl">
             {p.title}
           </h2>

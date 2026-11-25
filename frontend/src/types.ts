@@ -120,6 +120,28 @@ export interface PitchOpening {
   date: string | null
 }
 
+export interface VerifiedClaim {
+  id: string
+  kind: 'name' | 'number' | 'period'
+  text: string
+  field: string
+  sentence: string
+  status: 'supported' | 'partial' | 'stale' | 'unsupported' | 'estimate'
+  evidence: string[]
+  action: 'kept' | 'flagged' | 'replaced' | 'removed'
+  note: string
+}
+
+export interface VerificationReport {
+  claims: VerifiedClaim[]
+  checked: number
+  supported: number
+  pass_rate: number | null
+  estimates: number
+  llm_checked: number
+  actions: string[]
+}
+
 export interface CEOPitch {
   addressed_to: string
   title: string
@@ -147,6 +169,7 @@ export interface AssessmentReport {
   ai_opportunities: ReportOpportunity[]
   recommended_opportunity_id: string | null
   ceo_pitch: CEOPitch | null
+  verification?: VerificationReport | null
   prototype_available: boolean
   assumptions: string[]
   sources: string[]

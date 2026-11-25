@@ -198,7 +198,8 @@ def test_resume_from_stage_3_reuses_saved_outputs(tmp_path):
     run_pipeline(BUSINESS, settings=settings(tmp_path), llm=FakeLLM(), research=FakeResearch(), ui=quiet_ui())
     llm = FakeLLM(forbid={"BusinessProfile", "BusinessChallenges"})
     run_pipeline(BUSINESS, from_step=3, settings=settings(tmp_path), llm=llm, research=FakeResearch(), ui=quiet_ui())
-    assert llm.calls == ["AIOpportunities", "EvaluationScores", "ExecutiveSummary", "ExecutivePitchDraft", "prototype"]
+    assert llm.calls == ["AIOpportunities", "EvaluationScores", "ExecutiveSummary", "ExecutivePitchDraft",
+                         "ClaimVerdicts", "prototype"]
 
 
 def test_resume_from_stage_4_only_rebuilds_the_pitch(tmp_path):
@@ -206,7 +207,7 @@ def test_resume_from_stage_4_only_rebuilds_the_pitch(tmp_path):
     llm = FakeLLM(forbid={"BusinessProfile", "BusinessChallenges", "AIOpportunities", "EvaluationScores"})
     run_pipeline(BUSINESS, from_step=4, settings=settings(tmp_path), llm=llm, research=FakeResearch(),
                  ui=quiet_ui(), build_prototype=False)
-    assert llm.calls == ["ExecutivePitchDraft"]
+    assert llm.calls == ["ExecutivePitchDraft", "ClaimVerdicts"]   # pitch + one verifier check
 
 
 def test_resume_without_inputs_fails_clearly(tmp_path):
@@ -398,7 +399,8 @@ def test_full_pipeline_through_gemini_client(tmp_path):
     assert [c.response_schema.__name__ for c in structured] == [
         "FactBatch", "FactBatch", "BusinessProfileDraft",            # stage 1: extraction, profile
         "FactBatch", "BusinessProfileDraft",                          # stage 1: one gap-filling round
-        "BusinessChallenges", "AIOpportunities", "EvaluationScores", "ExecutiveSummary", "ExecutivePitchDraft"]
+        "BusinessChallenges", "AIOpportunities", "EvaluationScores", "ExecutiveSummary", "ExecutivePitchDraft",
+        "ClaimVerdicts"]                                              # stage 4: one verifier call for leftovers
     for c in client.models.configs:
         assert c.system_instruction and isinstance(c.system_instruction, str)
         assert c.thinking_config is not None
@@ -408,12 +410,12 @@ def test_full_pipeline_through_gemini_client(tmp_path):
     levels = [getattr(c.thinking_config.thinking_level, "name", c.thinking_config.thinking_level)
               for c in client.models.configs]
     # Fact extraction runs on the cheap model at low effort.
-    assert levels == ["LOW", "LOW", "MEDIUM", "LOW", "MEDIUM", "HIGH", "MEDIUM", "HIGH", "MEDIUM", "MEDIUM", "HIGH"]
+    assert levels == ["LOW", "LOW", "MEDIUM", "LOW", "MEDIUM", "HIGH", "MEDIUM", "HIGH", "MEDIUM", "MEDIUM", "LOW", "HIGH"]
 
     meta = json.loads((out / META_JSON).read_text())
-    # 10 structured calls x (100 in, 50+20 out) + stream (500 in, 3000+200 out); thinking counts as output.
-    assert meta["total_input_tokens"] == 10 * 100 + 500
-    assert meta["total_output_tokens"] == 10 * 70 + 3200
+    # 11 structured calls x (100 in, 50+20 out) + stream (500 in, 3000+200 out); thinking counts as output.
+    assert meta["total_input_tokens"] == 11 * 100 + 500
+    assert meta["total_output_tokens"] == 11 * 70 + 3200
     # Tokens are logged per stage and add up to the total.
     assert meta["stages"]["1"]["calls"] == 5
     assert sum(st["input_tokens"] for st in meta["stages"].values()) == meta["total_input_tokens"]
