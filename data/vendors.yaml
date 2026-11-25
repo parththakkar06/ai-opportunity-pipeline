@@ -11,7 +11,7 @@ crm:
   - {name: Sell.Do, url: "https://www.sell.do", markets: [india]}
 
 messaging:
-  - {name: WhatsApp Business Platform, url: "https://business.whatsapp.com", markets: [global]}
+  - {name: WhatsApp Business Platform, url: "https://whatsappbusiness.com/products/business-platform/", markets: [global]}
   - {name: Twilio, url: "https://www.twilio.com", markets: [global]}
   - {name: Gupshup, url: "https://www.gupshup.io", markets: [india]}
 

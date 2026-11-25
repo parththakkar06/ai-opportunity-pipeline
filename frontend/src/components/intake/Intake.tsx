@@ -199,6 +199,7 @@ export function Intake({
                   {relativeTime(r.generated_at)} · {QUALITY[r.data_quality] ?? r.data_quality}
                   {!r.complete && ` · stages ${r.stages_completed.join(', ')} of 4`}
                 </span>
+                {r.legacy && <span className="text-[13px] text-caution">Saved before the fact checks</span>}
                 {!r.complete && r.next_stage && (
                   <Button
                     variant="link"

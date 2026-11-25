@@ -27,7 +27,7 @@ us:
     summary: Patient health information must be protected; any vendor that handles it for the practice needs a signed Business Associate Agreement, and access should be limited to the minimum necessary.
   - id: tcpa
     title: Telephone Consumer Protection Act (TCPA)
-    url: "https://www.fcc.gov/general/telemarketing-and-robocalls"
+    url: "https://www.fcc.gov/general/telemarketing"
     triggers: [sms, voice_calls, marketing_messages]
     summary: Automated or AI-voiced calls and marketing texts need the recipient's prior consent, must identify the caller and must honor opt-outs.
   - id: can-spam

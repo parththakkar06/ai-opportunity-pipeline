@@ -1,6 +1,8 @@
+> **Status (Nov 25, 2026):** Phases 1-10 are implemented, each on its own branch `upgrade/phase-N-*`; Phase 11 (final review) is in progress. Where the build differs from this plan, see the deviations noted at the end of each phase's report and `docs/DESIGN_DIRECTION.md` §11.
+
 # Implementation plan: assessment upgrade (Phases 1–11)
 
-**Status:** plan only, awaiting approval. Each phase is implemented separately, then tested (`pytest -q tests/` and `npm run build`) before the next one starts.
+**Status:** approved and implemented (see the note above). Each phase is implemented separately, then tested (`pytest -q tests/` and `npm run build`) before the next one starts.
 
 **Baseline** (saved runs, OpenRouter `baidu/ernie-5.5-flash-preview:free`):
 - About **54k input + 52k output tokens per run**, in about 7–8 model calls.

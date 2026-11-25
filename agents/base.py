@@ -1,6 +1,8 @@
 """Shared agent plumbing: context object, file names, prompt loading."""
 from __future__ import annotations
 
+import time
+
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -72,6 +74,14 @@ class PipelineContext:
     note: Callable[[str], None] = lambda _msg: None
     search_providers_used: list[str] = field(default_factory=list)
     research_stats: dict = field(default_factory=dict)
+    started: float = field(default_factory=time.monotonic)
+
+    def elapsed(self) -> float:
+        return time.monotonic() - self.started
+
+    def over_budget(self) -> bool:
+        """True once the whole run has used its time budget (RUN_TIME_BUDGET_S)."""
+        return self.elapsed() > self.settings.run_time_budget_s
 
     def path(self, name: str) -> Path:
         return self.out_dir / name

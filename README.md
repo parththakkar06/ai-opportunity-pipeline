@@ -52,7 +52,7 @@ cp .env.example .env    # then add at least one model key
 | `OPENROUTER_API_KEY` | For `LLM_PROVIDER=openrouter`. Free `:free` models work on a free account, with a daily request limit; a fallback list switches models when one is busy |
 | `OPENAI_API_KEY` + `OPENAI_MODEL` | For `LLM_PROVIDER=openai` |
 | `TAVILY_API_KEY` / `SERPER_API_KEY` | Optional, better search. **With no search key, DuckDuckGo is used automatically** |
-| `CHEAP_MODEL`, `MAX_DOCS`, `RESEARCH_TIME_BUDGET_S`, `GAP_ROUND`, `WEIGHT_*` | Optional tuning: see `.env.example` |
+| `CHEAP_MODEL`, `MAX_DOCS`, `RESEARCH_TIME_BUDGET_S`, `RUN_TIME_BUDGET_S`, `GAP_ROUND`, `WEIGHT_*` | Optional tuning: see `.env.example`. `RUN_TIME_BUDGET_S` (default 600) skips the optional prototype once a run has used its time; total time is shown in Run details |
 
 Web app against the real API: run `uvicorn api.index:app --port 8000`, then in another terminal `cd frontend && npm run dev`, and open http://localhost:5173.
 
@@ -152,7 +152,8 @@ Interactive API docs: http://127.0.0.1:8000/docs.
 
 ```bash
 pytest -q tests/                       # 180+ offline tests: fixtures and fakes, no keys, about 15 seconds
-cd frontend && npm run build           # type-check and production build
+cd frontend && npm test && npm run build   # unit tests, then type-check and production build
+python scripts/check_links.py          # checks every curated vendor/compliance URL (needs internet)
 python tests/smoke_live.py             # live smoke test: real model + search, needs a key, uses quota
 ```
 

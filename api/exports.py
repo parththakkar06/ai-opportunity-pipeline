@@ -55,8 +55,8 @@ def _preview_html(d: ExportData) -> str:
             try:
                 _pdf, info = pitch_pdf(d)
                 opts = {k: info[k] for k in ("short", "font_pt", "margin") if k in info}
-            except PDFUnavailable:
-                opts = {}                  # no PDF engine: show the full version
+            except (PDFUnavailable, ValueError):
+                opts = {"short": True, "font_pt": 10, "margin": "10mm"}
             _PREVIEW[key] = pitch_html(d, **opts)
             disk.write_text(_PREVIEW[key], encoding="utf-8")
     return _PREVIEW[key]

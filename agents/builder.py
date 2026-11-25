@@ -303,6 +303,10 @@ class BuilderAgent(Agent):
         if not ctx.settings.build_prototype:
             ctx.note("prototype skipped (BUILD_PROTOTYPE=false)")
             return files
+        if ctx.over_budget():
+            ctx.note(f"prototype skipped: the run has used its {ctx.settings.run_time_budget_s:.0f} s budget "
+                     f"({ctx.elapsed():.0f} s so far; RUN_TIME_BUDGET_S)")
+            return files
         ctx.status("building the interactive prototype (the longest step)…")
         user = shared + (
             f"Build the interactive prototype for \"{strategy.winner.title}\" at {profile.business_name}. "

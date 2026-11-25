@@ -83,7 +83,14 @@ def report_payload(out_dir: Path) -> dict[str, Any]:
         "pitch_text": render_ceo_pitch_text(report),
         "prototype_url": f"/api/examples/{out_dir.name}/prototype" if report.prototype_available else None,
         "run_meta": _run_meta(out_dir),
+        "legacy": is_legacy(out_dir),
     }
+
+
+def is_legacy(out_dir: Path) -> bool:
+    """Saved before the provenance and verification checks: no per-stage log or no verifier output."""
+    meta = _run_meta(out_dir) or {}
+    return not meta.get("stages") or not (out_dir / "04_verification.json").exists()
 
 
 RUN_META_KEYS = ("provider", "model", "builder_model", "started_at", "finished_at", "total_input_tokens",
@@ -144,6 +151,7 @@ def list_examples() -> list[dict[str, Any]]:
             "data_quality": r.data_quality, "prototype_available": r.prototype_available,
             "website": r.company_overview.website, "industry": r.company_overview.industry,
             "input_name": _input_name(d) or r.business_name,
+            "legacy": is_legacy(d),
         })
     runs.sort(key=lambda x: x["generated_at"] or "", reverse=True)
     return runs

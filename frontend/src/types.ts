@@ -302,6 +302,8 @@ export interface ReportPayload {
   prototype_url: string | null
   usage?: Usage
   run_meta?: RunMeta | null
+  /** Saved before the provenance and verification checks existed. */
+  legacy?: boolean
 }
 
 export interface SavedRun {
@@ -316,6 +318,7 @@ export interface SavedRun {
   next_stage: number | null
   data_quality: string
   prototype_available: boolean
+  legacy?: boolean
 }
 
 export interface Health {

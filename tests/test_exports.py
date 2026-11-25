@@ -167,6 +167,29 @@ def test_api_endpoints(run_dir, monkeypatch):
     assert c.get("/api/examples/no-such-run/export/pptx").status_code == 404
 
 
+def test_royal_technosoft_pitch_export(pdf_ok):
+    needs_pdf(pdf_ok)
+    from fastapi.testclient import TestClient
+
+    import api.index as api
+    royal_dir = ROOT / "outputs" / "royal-technosoft"
+    if not royal_dir.exists():
+        pytest.skip("outputs/royal-technosoft not present")
+    d = load(royal_dir)
+    pdf, info = pitch_pdf(d)
+    assert page_count(pdf) == 1 and info["font_pt"] >= 10
+
+    c = TestClient(api.app)
+    r_pdf = c.get("/api/examples/royal-technosoft/export/pitch.pdf")
+    assert r_pdf.status_code == 200
+    assert r_pdf.headers["content-type"] == "application/pdf"
+    assert "attachment" in r_pdf.headers["content-disposition"]
+
+    r_html = c.get("/api/examples/royal-technosoft/export/pitch.html")
+    assert r_html.status_code == 200
+    assert "text/html" in r_html.headers["content-type"]
+
+
 def test_cli_export_flag_writes_06_files(tmp_path, monkeypatch, pdf_ok):
     needs_pdf(pdf_ok)
     import run_pipeline as rp

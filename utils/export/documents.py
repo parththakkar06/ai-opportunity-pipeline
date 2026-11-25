@@ -42,11 +42,12 @@ def pitch_html(d: ExportData, short: bool = False, font_pt: float = 10.5, margin
         raise ValueError("This run has no CEO pitch yet.")
     uncited = set(d.report.trace.uncited) if d.report.trace else set()
     opp_marks = [d.marks(f"pitch-opp-{i}") for i in range(1, len(p.opportunities_identified) + 1)]
-    used = {n for nums in [d.marks("pitch-opening"), *opp_marks, *(x[1] for x in d.lines("why_we_reached_out"))]
+    why = [] if short else d.lines("why_we_reached_out")
+    used = {n for nums in [d.marks("pitch-opening"), *opp_marks, *(x[1] for x in why)]
             for n in nums}
     return ENV.get_template("pitch.html.j2").render(
         r=d.report, p=p, accent=d.accent, short=short, font_pt=font_pt, margin=margin,
-        opening_marks=d.marks("pitch-opening"), why=[] if short else d.lines("why_we_reached_out"),
+        opening_marks=d.marks("pitch-opening"), why=why,
         opp_marks=opp_marks, uncited=[f"pitch-opp-{i}" in uncited for i in range(1, len(opp_marks) + 1)],
         sources=[c for c in d.report.citations if c.n in used])
 
@@ -55,7 +56,8 @@ def pitch_pdf(d: ExportData) -> tuple[bytes, dict]:
     """Exactly one A4 page. Tries full text at 10.5pt, then the short version, then 10pt with tighter margins.
     Body text never goes below 10pt."""
     attempts = [dict(short=False, font_pt=10.5), dict(short=True, font_pt=10.5),
-                dict(short=True, font_pt=10, margin="12mm")]
+                dict(short=True, font_pt=10, margin="12mm"),
+                dict(short=True, font_pt=10, margin="10mm")]
     for opts in attempts:
         pdf, engine = html_to_pdf(pitch_html(d, **opts))
         if page_count(pdf) == 1:

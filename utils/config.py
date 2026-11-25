@@ -91,6 +91,7 @@ class Settings:
     cheap_model: str = DEFAULT_GEMINI_MODEL          # fact extraction (and later: verifier, eval judge)
     max_docs: int = 6                                # full pages/PDFs read per run
     research_time_budget_s: float = 120.0            # search + fetch + gap round
+    run_time_budget_s: float = 600.0                 # whole run; past it, optional work (the prototype) is skipped
     gap_round: bool = True
     refresh_cache: bool = False
     tavily_api_key: str | None = None
@@ -153,6 +154,7 @@ def load_settings(provider_override: str | None = None) -> Settings:
         cheap_model=_env("CHEAP_MODEL", cheap_model),
         max_docs=max(0, int(_float("MAX_DOCS", 6))),
         research_time_budget_s=_float("RESEARCH_TIME_BUDGET_S", 120.0),
+        run_time_budget_s=_float("RUN_TIME_BUDGET_S", 600.0),
         gap_round=_bool("GAP_ROUND", True),
         tavily_api_key=_env("TAVILY_API_KEY"),
         serper_api_key=_env("SERPER_API_KEY"),

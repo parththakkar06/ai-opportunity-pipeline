@@ -1,3 +1,5 @@
+> **Superseded (Nov 25, 2026):** this plan describes the first frontend (tabs, slate/sky palette, framer-motion). The interface was redesigned in Phase 9 of the assessment upgrade; see `docs/DESIGN_DIRECTION.md` for the current design. Kept for history.
+
 # Frontend redesign plan: AI Opportunity Studio
 
 > **Status (Nov 25, 2026): all 6 phases done.**

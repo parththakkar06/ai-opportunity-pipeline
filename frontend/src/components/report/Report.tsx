@@ -74,6 +74,12 @@ export function Report({ payload, onEmail }: { payload: ReportPayload; onEmail: 
 
         <article id="report" aria-labelledby="report-title" className="print-full min-w-0 pt-10 pb-32 min-[1100px]:pt-14">
           <Header report={r} titleRef={titleRef} />
+          {payload.legacy && (
+            <p role="note" className="mt-6 max-w-[72ch] border-l-2 border-caution py-1 pl-3 text-sm text-ink">
+              This report was saved before the provenance and verification checks were added, so its names and
+              figures weren't checked against dated sources. Research the company again for a checked report.
+            </p>
+          )}
           <Metrics report={r} />
           <Section n={1} id="overview" title="Overview">
             <Overview report={r} />
