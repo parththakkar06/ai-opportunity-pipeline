@@ -166,9 +166,10 @@ def test_full_pipeline_offline(tmp_path):
     assert len(AIOpportunities.model_validate_json((out / OPPORTUNITIES_JSON).read_text()).opportunities) == 5
     strategy = WinningStrategy.model_validate_json((out / STRATEGY_JSON).read_text())
 
-    # Python, not the LLM, picks the winner: opp-1 = 80.5 with default weights.
+    # Python, not the LLM, picks the winner: opp-1 = 83.5 raw, 78.1 once ROI 9 is shrunk to 7.2
+    # (evidence share 0.5: one public-data driver, one benchmark, one assumption).
     assert strategy.winner.id == "opp-1"
-    assert strategy.winner_weighted_score == pytest.approx(80.5)
+    assert strategy.winner_weighted_score == pytest.approx(78.1)
     assert [r.opportunity_id for r in strategy.ranking] == ["opp-1", "opp-5", "opp-3", "opp-2", "opp-4"]
 
     md = (out / STRATEGY_MD).read_text()
@@ -258,9 +259,9 @@ def test_search_falls_back_to_next_provider():
 def test_weighted_score_and_custom_weights():
     scores = EvaluationScores.model_validate_json((FIXTURES / "EvaluationScores.json").read_text())
     opps = AIOpportunities.model_validate_json((FIXTURES / "AIOpportunities.json").read_text())
-    assert weighted_score(scores.scores[0], RubricWeights()) == pytest.approx(80.5)
+    assert weighted_score(scores.scores[0], RubricWeights()) == pytest.approx(83.5)
     # Weight speed only: opp-5 (speed 9) must beat opp-1 (speed 8).
-    speed_only = RubricWeights(roi_potential=0, feasibility=0, speed_to_value=1, competitive_moat=0)
+    speed_only = RubricWeights(roi_potential=0, ceo_relevance=0, feasibility=0, speed_to_value=1, competitive_moat=0)
     assert rank_opportunities(opps, scores, speed_only)[0].opportunity_id == "opp-5"
 
 

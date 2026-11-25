@@ -78,6 +78,23 @@ export function OpportunitiesSection({
                 {recommended.expected_impact} <span className="text-muted-foreground">· moves {recommended.primary_metric}</span>
               </Detail>
               <Detail level={3} label="Effort">{recommended.effort}</Detail>
+              {recommended.evidence_share != null && (
+                <p className="text-sm text-muted-foreground">
+                  Evidence behind the value estimate: {Math.round(recommended.evidence_share * 100)}% · ROI adjusted to{' '}
+                  {recommended.roi_adjusted}/10
+                </p>
+              )}
+              {report.sensitivity && (
+                <p className="text-sm text-muted-foreground">
+                  Sensitivity check:{' '}
+                  {report.sensitivity.winner_stable
+                    ? 'still the winner under conservative assumptions.'
+                    : `under conservative assumptions, ${
+                        opps.find((x) => x.id === report.sensitivity?.conservative_winner_id)?.title ??
+                        report.sensitivity.conservative_winner_id
+                      } would win instead.`}
+                </p>
+              )}
             </div>
             <div>
               <h3 className="text-sm font-semibold text-muted-foreground">Rubric scores</h3>
@@ -145,6 +162,13 @@ function OpportunityCard({
         <div className="space-y-3">
           <Detail label="Problem solved">{o.problem_solved}</Detail>
           <Detail label="Expected impact">{o.expected_impact}</Detail>
+          {o.evidence_share != null && (
+            <p className="text-sm text-muted-foreground">
+              Evidence behind the value estimate: {Math.round(o.evidence_share * 100)}% · ROI adjusted to{' '}
+              {o.roi_adjusted}/10
+            </p>
+          )}
+          {o.why_not && <p className="text-sm text-muted-foreground italic">Why not: {o.why_not}</p>}
           <details className="group">
             <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-accent marker:content-none hover:underline">
               <span className="group-open:hidden">Show how it works and effort</span>

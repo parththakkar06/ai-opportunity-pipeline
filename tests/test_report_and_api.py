@@ -355,7 +355,9 @@ def test_api_rejects_bad_run_slug(client):
 def test_report_opportunities_carry_rubric_scores(tmp_path):
     report = build_report(full_run(tmp_path, build_prototype=False))
     top = report.ai_opportunities[0]
-    assert [r.criterion for r in top.rubric] == ["roi_potential", "feasibility", "speed_to_value", "competitive_moat"]
-    assert [r.score for r in top.rubric] == [9, 8, 8, 6]          # opp-1 from the fixture
+    assert [r.criterion for r in top.rubric] == ["roi_potential", "feasibility", "speed_to_value", "competitive_moat",
+                                                 "ceo_relevance"]
+    assert [r.score for r in top.rubric] == [9, 8, 8, 6, 9]       # opp-1 from the fixture
+    assert top.evidence_share == 0.5 and top.roi_adjusted == 7.2
     assert abs(sum(r.weight for r in top.rubric) - 1.0) < 1e-6
     assert top.biggest_risk == "API access" and all(r.rationale for r in top.rubric)

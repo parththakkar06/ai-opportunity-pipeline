@@ -96,6 +96,23 @@ export interface ReportOpportunity {
   rubric: RubricScore[]
   biggest_risk: string | null
   is_recommended: boolean
+  evidence_share?: number | null
+  roi_adjusted?: number | null
+  why_not?: string | null
+}
+
+export interface RankChange {
+  opportunity_id: string
+  title: string
+  base_rank: number
+  conservative_rank: number
+}
+
+export interface Sensitivity {
+  winner_stable: boolean
+  conservative_winner_id: string
+  conservative_scores: Record<string, number>
+  rank_changes: RankChange[]
 }
 
 export interface OpportunityHighlight {
@@ -170,6 +187,7 @@ export interface AssessmentReport {
   recommended_opportunity_id: string | null
   ceo_pitch: CEOPitch | null
   verification?: VerificationReport | null
+  sensitivity?: Sensitivity | null
   prototype_available: boolean
   assumptions: string[]
   sources: string[]

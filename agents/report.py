@@ -35,6 +35,7 @@ RUBRIC_LABELS = {
     "feasibility": "Feasibility",
     "speed_to_value": "Speed to value",
     "competitive_moat": "Competitive moat",
+    "ceo_relevance": "CEO relevance",
 }
 
 
@@ -77,6 +78,7 @@ def build_report(out_dir: Path) -> AssessmentReport:
     strategy = _load(find_file(out_dir, STRATEGY_JSON), WinningStrategy)
     ranking = {r.opportunity_id: r for r in strategy.ranking} if strategy else {}
     opportunities: list[ReportOpportunity] = []
+    why_not = {x.opportunity_id: x.reason for x in strategy.summary.why_not_the_others} if strategy else {}
     if opps:
         for o in opps.opportunities:
             r = ranking.get(o.id)
@@ -90,8 +92,10 @@ def build_report(out_dir: Path) -> AssessmentReport:
                 rubric=[
                     RubricScore(criterion=c, label=label, score=getattr(r.scores, c).score,
                                 weight=strategy.rubric_weights.get(c, 0.0), rationale=getattr(r.scores, c).rationale)
-                    for c, label in RUBRIC_LABELS.items()
+                    for c, label in RUBRIC_LABELS.items() if getattr(r.scores, c, None) is not None
                 ] if r and strategy else [],
+                evidence_share=r.evidence_share if r else None, roi_adjusted=r.roi_adjusted if r else None,
+                why_not=why_not.get(o.id),
                 biggest_risk=r.scores.biggest_risk if r else None,
                 is_recommended=bool(strategy and strategy.winner.id == o.id),
             ))
@@ -164,6 +168,7 @@ def build_report(out_dir: Path) -> AssessmentReport:
         ),
         business_challenges=challenges,
         ai_opportunities=opportunities,
+        sensitivity=strategy.sensitivity if strategy else None,
         recommended_opportunity_id=strategy.winner.id if strategy else None,
         ceo_pitch=pitch,
         verification=verification,
@@ -262,8 +267,20 @@ def render_report_markdown(report: AssessmentReport) -> str:
             f"- **How the AI works:** {o.ai_mechanism}",
             f"- **Expected impact:** {o.expected_impact} (metric: {o.primary_metric})",
             f"- **Effort:** {o.effort}",
-            "",
         ]
+        if o.evidence_share is not None:
+            lines.append(f"- **Evidence behind the value estimate:** {o.evidence_share:.0%} (ROI score adjusted to "
+                         f"{o.roi_adjusted:g}/10)")
+        if o.why_not and not o.is_recommended:
+            lines.append(f"- _Why not: {o.why_not}_")
+        lines.append("")
+    sens = report.sensitivity
+    if sens:
+        titles = {o.id: o.title for o in report.ai_opportunities}
+        lines.append("**Sensitivity check (conservative case):** " + (
+            "the recommended idea still wins." if sens.winner_stable else
+            f"the winner would change to {titles.get(sens.conservative_winner_id, sens.conservative_winner_id)}."))
+        lines += [f"- {c.title}: #{c.base_rank} → #{c.conservative_rank}" for c in sens.rank_changes] + [""]
     lines += ["## 5. Personalized CEO Pitch", ""]
     p = report.ceo_pitch
     if not p:
