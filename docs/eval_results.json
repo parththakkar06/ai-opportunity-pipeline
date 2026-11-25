@@ -1,15 +1,57 @@
 {
   "similarity": {
-    "overall": 0.081,
+    "overall": 0.044,
     "per_company": {
-      "shivalik-group": 0.081,
-      "sobha": 0.081
+      "adani-realty": 0.049,
+      "cafe-nook-nook-by-grace-coffee-co": 0.029,
+      "royal-technosoft": 0.034,
+      "shivalik-group": 0.059,
+      "sobha": 0.05
     },
-    "pairs": 42
+    "pairs": 462
   },
   "similarity_method": "TF-IDF cosine, no API calls",
   "judge_model": null,
   "runs": {
+    "adani-realty": {
+      "pass_rate": 1.0,
+      "claims": "18/18",
+      "tokens_in": 88896,
+      "tokens_out": 76855,
+      "calls": 7,
+      "seconds": 336.5,
+      "citations": 15,
+      "uncited": 1,
+      "legacy": false,
+      "judge": null,
+      "judge_score": null
+    },
+    "cafe-nook-nook-by-grace-coffee-co": {
+      "pass_rate": 0.75,
+      "claims": "3/4",
+      "tokens_in": 69556,
+      "tokens_out": 78342,
+      "calls": 9,
+      "seconds": 1086.5,
+      "citations": 11,
+      "uncited": 1,
+      "legacy": false,
+      "judge": null,
+      "judge_score": null
+    },
+    "royal-technosoft": {
+      "pass_rate": 1.0,
+      "claims": "12/12",
+      "tokens_in": 84558,
+      "tokens_out": 64498,
+      "calls": 8,
+      "seconds": 367.3,
+      "citations": 15,
+      "uncited": 1,
+      "legacy": false,
+      "judge": null,
+      "judge_score": null
+    },
     "shivalik-group": {
       "pass_rate": null,
       "claims": null,

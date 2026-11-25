@@ -147,17 +147,27 @@ Interactive API docs: http://127.0.0.1:8000/docs.
 <!-- eval:start -->
 | Company | Run | Similarity ↓ | Judge (0-100) | Reasoning | Research | Practicality | Specificity | Verified | Citations | Tokens in / out | Calls | Time |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Shivalik Group | legacy | 0.081 | — | — | — | — | — | — | — | 54,621 / 50,014 | — | — |
-| Sobha Limited | legacy | 0.081 | — | — | — | — | — | — | — | 54,255 / 53,738 | — | — |
+| Adani Realty | current | 0.049 | — | — | — | — | — | 100% (18/18) | 15 | 88,896 / 76,855 | 7 | 336 s |
+| Nook by Grace Coffee Co. / Cafe Nook | current | 0.029 | — | — | — | — | — | 75% (3/4) | 11 | 69,556 / 78,342 | 9 | 1,086 s |
+| Royal Technosoft P Limited | current | 0.034 | — | — | — | — | — | 100% (12/12) | 15 | 84,558 / 64,498 | 8 | 367 s |
+| Shivalik Group | legacy | 0.059 | — | — | — | — | — | — | — | 54,621 / 50,014 | — | — |
+| Sobha Limited | legacy | 0.05 | — | — | — | — | — | — | — | 54,255 / 53,738 | — | — |
 
-- **Similarity** is the mean cosine between this company's AI opportunities and every other company's (TF-IDF cosine, no API calls); lower means more company-specific. Overall: **0.081** over 42 cross-company pairs.
+- **Similarity** is the mean cosine between this company's AI opportunities and every other company's (TF-IDF cosine, no API calls); lower means more company-specific. Overall: **0.044** over 462 cross-company pairs.
 - **Judge** is not run (pass `--judge`). It scores the criteria a single report can show: reasoning (30), research (20) and practicality (20), renormalized to 0-100; specificity is reported but not weighted. AI tool usage, product quality and documentation are project-level and aren't judged per report.
 - **Verified** is the Phase 3 verifier's pass rate over factual claims in the pitch (estimates excluded).
 - **legacy** runs were saved before the Phase 1-6 upgrade: no per-stage tokens, verifier or citations.
-- Skipped: adani-realty: HandoffError; blue-bottle-coffee: no AI opportunities yet
+- Skipped: blue-bottle-coffee: no AI opportunities yet
 <!-- eval:end -->
 
-**Status:** the table above only has the two runs saved before the upgrade ("legacy"). Fresh live runs for Adani Realty, Sobha, Prestige, Brigade, Puravankara and Shivalik, about 12 calls each, are the next step. They'll fill in the verifier, citations and per-stage token columns.
+**Status:** the table has three runs of the final pipeline (Adani Realty, Royal Technosoft, Cafe Nook) and two earlier
+"legacy" runs (Sobha, Shivalik), saved before the fact checks. The judge column is empty: scoring is one cheap-model call
+per report (`python scripts/eval.py --judge`) and hasn't been run. The task's other example companies (Sobha, Prestige,
+Brigade, Puravankara) still need fresh runs.
+
+**Read the numbers honestly:** a run of the final pipeline makes 7 to 9 model calls and uses about 70–89k input and 64–78k
+output tokens, which is more than the old pipeline's 54k/50k because it now reads whole documents. On free models, runs took
+between about 6 and 18 minutes.
 
 ## Tests
 
@@ -175,4 +185,4 @@ python tests/smoke_live.py             # live smoke test: real model + search, n
 - **Embeddings for the "is this specific?" metric.** The eval currently uses TF-IDF by default; Gemini embeddings are wired in but unmeasured.
 - **Human review in the loop.** Let a user mark a fact as wrong in the Trace panel, and re-run only the affected stages.
 - **Broader curated lists.** More vendor categories and compliance regimes (GDPR, UAE PDPL), each still with official links.
-- **Hosting.** A small deployment with a queue for runs and per-user saved reports; today it's a local app.
+- **Always-on hosting.** The free Render service sleeps when idle and loses saved reports on restart unless the Dataset sync is set up. A small paid instance with a persistent disk would fix both, and a queue would stop one long run blocking others.
