@@ -1,0 +1,37 @@
+# Curated compliance notes. The strategist may only cite rule ids from this file; Python drops others
+# and attaches the title and official URL. Summaries are deliberately high level: not legal advice.
+# `triggers` are the data or channel types that make a rule relevant.
+
+india:
+  - id: dpdp-2023
+    title: Digital Personal Data Protection Act, 2023
+    url: "https://www.meity.gov.in/data-protection-framework"
+    triggers: [personal_data, marketing_messages, voice_calls, health_data]
+    summary: Process personal data only for a stated, lawful purpose with free, informed consent (or a legitimate use), give a clear notice, let people withdraw consent, and delete data once the purpose is served.
+  - id: rera-advertising
+    title: RERA 2016, advertisement and disclosure rules
+    url: "https://mohua.gov.in/cms/TheRealEstateAct2016.php"
+    triggers: [real_estate_ads]
+    summary: Any advertisement or marketing message for a registered project must show its RERA registration number and the state authority's website, and must not promise anything that differs from the registered details.
+  - id: trai-dlt
+    title: TRAI commercial communications rules (DLT registration)
+    url: "https://www.trai.gov.in"
+    triggers: [sms, marketing_messages, voice_calls]
+    summary: Promotional and transactional SMS and calls must go through DLT-registered headers and templates, and promotional messages need recorded customer consent and must respect do-not-disturb preferences.
+
+us:
+  - id: hipaa
+    title: HIPAA Privacy and Security Rules
+    url: "https://www.hhs.gov/hipaa/index.html"
+    triggers: [health_data]
+    summary: Patient health information must be protected; any vendor that handles it for the practice needs a signed Business Associate Agreement, and access should be limited to the minimum necessary.
+  - id: tcpa
+    title: Telephone Consumer Protection Act (TCPA)
+    url: "https://www.fcc.gov/general/telemarketing-and-robocalls"
+    triggers: [sms, voice_calls, marketing_messages]
+    summary: Automated or AI-voiced calls and marketing texts need the recipient's prior consent, must identify the caller and must honor opt-outs.
+  - id: can-spam
+    title: CAN-SPAM Act
+    url: "https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business"
+    triggers: [marketing_messages]
+    summary: Commercial emails need accurate sender details and subject lines, a physical address and a working opt-out honored within 10 business days.

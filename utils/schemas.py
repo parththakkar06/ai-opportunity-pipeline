@@ -228,6 +228,39 @@ class ImpactEstimate(BaseModel):
     basis: str = Field(description="How the value was estimated, with assumptions")
 
 
+class VendorRef(BaseModel):
+    name: str
+    category: str
+    url: str
+
+
+class BuildVsBuy(BaseModel):
+    decision: Literal["build", "buy", "hybrid"]
+    vendors: list[str] = Field(default_factory=list, description="Vendor names from <vendor_catalog> only")
+    rationale: str
+    vendor_refs: list[VendorRef] = Field(default_factory=list, description="Filled in Python from the curated list")
+
+
+class PilotMilestone(BaseModel):
+    day: Literal[30, 60, 90]
+    milestone: str
+    kpi: str
+    target: str = Field(description="A measurable target, e.g. 'no-show rate from 12% to 9%'")
+
+
+class DataReadiness(BaseModel):
+    source: str = Field(description="A data source the idea needs, e.g. 'CRM lead history'")
+    status: Literal["have", "likely", "missing"]
+    reason: str
+
+
+class ComplianceNote(BaseModel):
+    rule_id: str = Field(description="An id from <compliance_rules> only")
+    note: str = Field(description="How the rule applies to this idea, in one sentence")
+    title: str = ""
+    url: str = ""
+
+
 class AIOpportunity(BaseModel):
     id: str = Field(description="Stable id: 'opp-1', 'opp-2', ...")
     title: str
@@ -241,6 +274,10 @@ class AIOpportunity(BaseModel):
     estimated_impact: ImpactEstimate
     required_data: list[str]
     risks: list[str]
+    build_vs_buy: Optional[BuildVsBuy] = None
+    pilot_30_60_90: list[PilotMilestone] = Field(default_factory=list)
+    data_readiness: list[DataReadiness] = Field(default_factory=list)
+    compliance: list[ComplianceNote] = Field(default_factory=list)
 
 
 class AIOpportunities(BaseModel):
@@ -483,6 +520,10 @@ class ReportOpportunity(BaseModel):
     evidence_share: Optional[float] = None
     roi_adjusted: Optional[float] = None
     why_not: Optional[str] = None
+    build_vs_buy: Optional[BuildVsBuy] = None
+    pilot_30_60_90: list[PilotMilestone] = Field(default_factory=list)
+    data_readiness: list[DataReadiness] = Field(default_factory=list)
+    compliance: list[ComplianceNote] = Field(default_factory=list)
 
 
 class CEOPitch(BaseModel):

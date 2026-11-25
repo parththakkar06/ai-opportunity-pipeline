@@ -1,0 +1,51 @@
+# Curated vendor list for build-vs-buy recommendations.
+# The strategist may only name vendors from this file; Python drops any other name.
+# Markets: india, us, global (global vendors are offered in every market).
+# Each entry carries its official URL so it can be checked. Curated 2026-11; verify current pricing and terms.
+
+crm:
+  - {name: Salesforce, url: "https://www.salesforce.com", markets: [global]}
+  - {name: HubSpot, url: "https://www.hubspot.com", markets: [global]}
+  - {name: Zoho CRM, url: "https://www.zoho.com/crm/", markets: [global]}
+  - {name: LeadSquared, url: "https://www.leadsquared.com", markets: [india]}
+  - {name: Sell.Do, url: "https://www.sell.do", markets: [india]}
+
+messaging:
+  - {name: WhatsApp Business Platform, url: "https://business.whatsapp.com", markets: [global]}
+  - {name: Twilio, url: "https://www.twilio.com", markets: [global]}
+  - {name: Gupshup, url: "https://www.gupshup.io", markets: [india]}
+
+telephony_and_voice:
+  - {name: Twilio Voice, url: "https://www.twilio.com/en-us/voice", markets: [global]}
+  - {name: Exotel, url: "https://exotel.com", markets: [india]}
+  - {name: Ozonetel, url: "https://ozonetel.com", markets: [india]}
+
+llm_platform:
+  - {name: OpenAI API, url: "https://platform.openai.com", markets: [global]}
+  - {name: Google Gemini API, url: "https://ai.google.dev", markets: [global]}
+  - {name: Anthropic Claude API, url: "https://www.anthropic.com/api", markets: [global]}
+  - {name: Azure OpenAI, url: "https://azure.microsoft.com/en-us/products/ai-services/openai-service", markets: [global]}
+
+document_ai:
+  - {name: Google Document AI, url: "https://cloud.google.com/document-ai", markets: [global]}
+  - {name: Amazon Textract, url: "https://aws.amazon.com/textract/", markets: [global]}
+  - {name: Azure AI Document Intelligence, url: "https://azure.microsoft.com/en-us/products/ai-services/ai-document-intelligence", markets: [global]}
+
+analytics_bi:
+  - {name: Microsoft Power BI, url: "https://www.microsoft.com/en-us/power-platform/products/power-bi", markets: [global]}
+  - {name: Tableau, url: "https://www.tableau.com", markets: [global]}
+  - {name: Looker Studio, url: "https://lookerstudio.google.com", markets: [global]}
+
+customer_support:
+  - {name: Zendesk, url: "https://www.zendesk.com", markets: [global]}
+  - {name: Freshdesk, url: "https://www.freshworks.com/freshdesk/", markets: [global]}
+
+construction:
+  - {name: Procore, url: "https://www.procore.com", markets: [global]}
+  - {name: Autodesk Construction Cloud, url: "https://construction.autodesk.com", markets: [global]}
+
+dental_practice:
+  - {name: Dentrix, url: "https://www.dentrix.com", markets: [us]}
+  - {name: Open Dental, url: "https://www.opendental.com", markets: [us]}
+  - {name: Weave, url: "https://www.getweave.com", markets: [us]}
+  - {name: NexHealth, url: "https://www.nexhealth.com", markets: [us]}
