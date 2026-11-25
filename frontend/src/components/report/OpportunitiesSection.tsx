@@ -110,6 +110,9 @@ export function OpportunitiesSection({
               )}
             </div>
           </div>
+          <div className="mt-5 border-t border-border pt-5">
+            <PracticalDetails o={recommended} />
+          </div>
           <SolvesChips ids={recommended.addresses_challenges} titles={titles} onJump={onJumpToChallenge} />
         </article>
       </Reveal>
@@ -178,6 +181,7 @@ function OpportunityCard({
               <Detail label="How the AI works">{o.ai_mechanism}</Detail>
               <Detail label="Effort">{o.effort}</Detail>
               {o.biggest_risk && <Detail label="Biggest risk">{o.biggest_risk}</Detail>}
+              <PracticalDetails o={o} />
             </div>
           </details>
         </div>
@@ -262,3 +266,77 @@ function Detail({ label, children, level = 4 }: { label: string; children: React
 }
 
 const prettyCategory = (c: string) => c.replace(/_/g, ' ').replace(/^\w/, (m) => m.toUpperCase())
+
+const READINESS_LABEL = { have: 'Have', likely: 'Likely', missing: 'Missing' } as const
+
+function PracticalDetails({ o }: { o: ReportOpportunity }) {
+  const pilot = [...(o.pilot_30_60_90 ?? [])].sort((a, b) => a.day - b.day)
+  if (!o.build_vs_buy && !pilot.length && !o.data_readiness?.length && !o.compliance?.length) return null
+  return (
+    <div className="space-y-3 text-sm text-secondary">
+      {o.build_vs_buy && (
+        <div>
+          <p className="font-semibold text-foreground">
+            Build vs buy: <span className="capitalize">{o.build_vs_buy.decision}</span>
+          </p>
+          {o.build_vs_buy.vendor_refs.length > 0 && (
+            <p>
+              {o.build_vs_buy.vendor_refs.map((v, i) => (
+                <span key={v.name}>
+                  {i > 0 && ', '}
+                  <a href={v.url} target="_blank" rel="noreferrer" className="text-accent underline-offset-2 hover:underline">
+                    {v.name}
+                  </a>
+                </span>
+              ))}
+            </p>
+          )}
+          <p className="text-muted-foreground">{o.build_vs_buy.rationale}</p>
+        </div>
+      )}
+      {pilot.length > 0 && (
+        <div>
+          <p className="font-semibold text-foreground">30/60/90-day pilot</p>
+          <ol className="mt-1 space-y-1">
+            {pilot.map((m) => (
+              <li key={m.day}>
+                <span className="font-medium text-foreground">Day {m.day}:</span> {m.milestone}{' '}
+                <span className="text-muted-foreground">
+                  ({m.kpi}: {m.target})
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+      {o.data_readiness && o.data_readiness.length > 0 && (
+        <div>
+          <p className="font-semibold text-foreground">Data readiness</p>
+          <ul className="mt-1 space-y-1">
+            {o.data_readiness.map((d) => (
+              <li key={d.source}>
+                {d.source}: <span className="font-medium text-foreground">{READINESS_LABEL[d.status]}</span>{' '}
+                <span className="text-muted-foreground">({d.reason})</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {o.compliance && o.compliance.length > 0 && (
+        <div>
+          <p className="font-semibold text-foreground">Compliance</p>
+          <ul className="mt-1 space-y-1">
+            {o.compliance.map((c) => (
+              <li key={c.rule_id}>
+                <a href={c.url} target="_blank" rel="noreferrer" className="text-accent underline-offset-2 hover:underline">
+                  {c.title}
+                </a>
+                : {c.note}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}

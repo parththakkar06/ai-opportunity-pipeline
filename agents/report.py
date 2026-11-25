@@ -96,6 +96,8 @@ def build_report(out_dir: Path) -> AssessmentReport:
                 ] if r and strategy else [],
                 evidence_share=r.evidence_share if r else None, roi_adjusted=r.roi_adjusted if r else None,
                 why_not=why_not.get(o.id),
+                build_vs_buy=o.build_vs_buy, pilot_30_60_90=o.pilot_30_60_90, data_readiness=o.data_readiness,
+                compliance=o.compliance,
                 biggest_risk=r.scores.biggest_risk if r else None,
                 is_recommended=bool(strategy and strategy.winner.id == o.id),
             ))
@@ -271,6 +273,16 @@ def render_report_markdown(report: AssessmentReport) -> str:
         if o.evidence_share is not None:
             lines.append(f"- **Evidence behind the value estimate:** {o.evidence_share:.0%} (ROI score adjusted to "
                          f"{o.roi_adjusted:g}/10)")
+        if o.build_vs_buy:
+            vendors = ", ".join(f"[{v.name}]({v.url})" for v in o.build_vs_buy.vendor_refs) or "no curated vendor fits"
+            lines.append(f"- **Build vs buy:** {o.build_vs_buy.decision} · {vendors}. {o.build_vs_buy.rationale}")
+        if o.pilot_30_60_90:
+            lines.append("- **30/60/90-day pilot:** " + "; ".join(
+                f"day {m.day}: {m.milestone} ({m.kpi}: {m.target})" for m in sorted(o.pilot_30_60_90, key=lambda m: m.day)))
+        if o.data_readiness:
+            lines.append("- **Data readiness:** " + "; ".join(f"{d.source}: {d.status}" for d in o.data_readiness))
+        if o.compliance:
+            lines.append("- **Compliance:** " + "; ".join(f"[{c.title}]({c.url}): {c.note}" for c in o.compliance))
         if o.why_not and not o.is_recommended:
             lines.append(f"- _Why not: {o.why_not}_")
         lines.append("")

@@ -29,7 +29,62 @@
       "addresses_challenges": [
         "ch-1"
       ],
-      "applies_to": "Hygiene schedule at both clinics"
+      "applies_to": "Hygiene schedule at both clinics",
+      "build_vs_buy": {
+        "decision": "hybrid",
+        "vendors": [
+          "Open Dental",
+          "Twilio",
+          "DentalBot Pro"
+        ],
+        "rationale": "Read the schedule from the practice system and text the waitlist; build only the no-show model."
+      },
+      "pilot_30_60_90": [
+        {
+          "day": 30,
+          "milestone": "Model trained on 12 months of appointments",
+          "kpi": "No-show prediction AUC",
+          "target": "≥ 0.70"
+        },
+        {
+          "day": 60,
+          "milestone": "Waitlist backfill live at Austin",
+          "kpi": "Empty hygiene slots per week",
+          "target": "from 25 to 18"
+        },
+        {
+          "day": 90,
+          "milestone": "Both clinics",
+          "kpi": "Hygiene chair utilization",
+          "target": "from 82% to 88%"
+        }
+      ],
+      "data_readiness": [
+        {
+          "source": "Appointment history",
+          "status": "have",
+          "reason": "Practice-management system keeps every booking"
+        },
+        {
+          "source": "Waitlist",
+          "status": "likely",
+          "reason": "Front desk keeps one, maybe on paper"
+        }
+      ],
+      "compliance": [
+        {
+          "rule_id": "hipaa",
+          "note": "Appointment data is patient information; the texting vendor needs a BAA."
+        },
+        {
+          "rule_id": "tcpa",
+          "note": "Backfill texts need patient consent and an opt-out."
+        },
+        {
+          "rule_id": "gdpr",
+          "note": "EU data rules"
+        }
+      ]
     },
     {
       "id": "opp-2",
@@ -60,7 +115,47 @@
       "addresses_challenges": [
         "ch-4"
       ],
-      "applies_to": "Front-desk insurance checks before every visit"
+      "applies_to": "Front-desk insurance checks before every visit",
+      "build_vs_buy": {
+        "decision": "buy",
+        "vendors": [
+          "Weave"
+        ],
+        "rationale": "Benefits checks are a commodity; integrate rather than build."
+      },
+      "pilot_30_60_90": [
+        {
+          "day": 30,
+          "milestone": "Vendor connected to the schedule",
+          "kpi": "Verifications done automatically",
+          "target": "50%"
+        },
+        {
+          "day": 60,
+          "milestone": "Staff workflow switched",
+          "kpi": "Staff hours per week on verification",
+          "target": "from 25 to 12"
+        },
+        {
+          "day": 90,
+          "milestone": "Both clinics",
+          "kpi": "Claim denials for eligibility",
+          "target": "down 30%"
+        }
+      ],
+      "data_readiness": [
+        {
+          "source": "Patient insurance details",
+          "status": "have",
+          "reason": "Collected at intake"
+        }
+      ],
+      "compliance": [
+        {
+          "rule_id": "hipaa",
+          "note": "Insurance and patient data need a BAA with the vendor."
+        }
+      ]
     },
     {
       "id": "opp-3",
@@ -91,7 +186,52 @@
       "addresses_challenges": [
         "ch-3"
       ],
-      "applies_to": "Inbound calls to both clinics, evenings and peaks"
+      "applies_to": "Inbound calls to both clinics, evenings and peaks",
+      "build_vs_buy": {
+        "decision": "hybrid",
+        "vendors": [
+          "Twilio Voice",
+          "Google Gemini API"
+        ],
+        "rationale": "Buy telephony, build the booking logic on the schedule."
+      },
+      "pilot_30_60_90": [
+        {
+          "day": 30,
+          "milestone": "After-hours line live",
+          "kpi": "Calls answered after hours",
+          "target": "90%"
+        },
+        {
+          "day": 60,
+          "milestone": "Books into the schedule",
+          "kpi": "After-hours bookings per month",
+          "target": "20"
+        },
+        {
+          "day": 90,
+          "milestone": "Tuned on transcripts",
+          "kpi": "Bookings per month",
+          "target": "40"
+        }
+      ],
+      "data_readiness": [
+        {
+          "source": "Call logs",
+          "status": "likely",
+          "reason": "Phone system usually records missed calls"
+        }
+      ],
+      "compliance": [
+        {
+          "rule_id": "tcpa",
+          "note": "The AI voice must identify itself and honor opt-outs."
+        },
+        {
+          "rule_id": "hipaa",
+          "note": "Calls contain patient details."
+        }
+      ]
     },
     {
       "id": "opp-4",
@@ -121,7 +261,50 @@
       "addresses_challenges": [
         "ch-4"
       ],
-      "applies_to": "Dentist charting after each exam"
+      "applies_to": "Dentist charting after each exam",
+      "build_vs_buy": {
+        "decision": "buy",
+        "vendors": [],
+        "rationale": "No curated clinical-notes vendor; evaluate options with compliance review."
+      },
+      "pilot_30_60_90": [
+        {
+          "day": 30,
+          "milestone": "One dentist trial",
+          "kpi": "Draft notes accepted",
+          "target": "70%"
+        },
+        {
+          "day": 60,
+          "milestone": "All dentists",
+          "kpi": "Charting minutes per patient",
+          "target": "from 8 to 4"
+        },
+        {
+          "day": 90,
+          "milestone": "Audit",
+          "kpi": "Note errors found in review",
+          "target": "under 2%"
+        }
+      ],
+      "data_readiness": [
+        {
+          "source": "Clinical note templates",
+          "status": "have",
+          "reason": "Used today"
+        },
+        {
+          "source": "Consent for recording",
+          "status": "missing",
+          "reason": "Not collected today"
+        }
+      ],
+      "compliance": [
+        {
+          "rule_id": "hipaa",
+          "note": "Recorded visits are health data."
+        }
+      ]
     },
     {
       "id": "opp-5",
@@ -151,7 +334,51 @@
       "addresses_challenges": [
         "ch-2"
       ],
-      "applies_to": "Pending Invisalign and restorative plans"
+      "applies_to": "Pending Invisalign and restorative plans",
+      "build_vs_buy": {
+        "decision": "build",
+        "vendors": [
+          "HubSpot"
+        ],
+        "rationale": "Simple nudges on top of existing plan data."
+      },
+      "pilot_30_60_90": [
+        {
+          "day": 30,
+          "milestone": "Pending plans list",
+          "kpi": "Plans with a follow-up",
+          "target": "100%"
+        },
+        {
+          "day": 60,
+          "milestone": "Nudges sent",
+          "kpi": "Reply rate",
+          "target": "15%"
+        },
+        {
+          "day": 90,
+          "milestone": "Both clinics",
+          "kpi": "Case acceptance",
+          "target": "up 8%"
+        }
+      ],
+      "data_readiness": [
+        {
+          "source": "Treatment plans",
+          "status": "have",
+          "reason": "In the practice system"
+        }
+      ],
+      "compliance": [
+        {
+          "rule_id": "can-spam",
+          "note": "Follow-up emails need an opt-out."
+        },
+        {
+          "rule_id": "hipaa",
+          "note": "Plans are health data."
+        }
+      ]
     }
   ]
 }

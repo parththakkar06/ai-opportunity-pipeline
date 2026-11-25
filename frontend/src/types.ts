@@ -99,6 +99,43 @@ export interface ReportOpportunity {
   evidence_share?: number | null
   roi_adjusted?: number | null
   why_not?: string | null
+  build_vs_buy?: BuildVsBuy | null
+  pilot_30_60_90?: PilotMilestone[]
+  data_readiness?: DataReadiness[]
+  compliance?: ComplianceNote[]
+}
+
+export interface VendorRef {
+  name: string
+  category: string
+  url: string
+}
+
+export interface BuildVsBuy {
+  decision: 'build' | 'buy' | 'hybrid'
+  vendors: string[]
+  rationale: string
+  vendor_refs: VendorRef[]
+}
+
+export interface PilotMilestone {
+  day: 30 | 60 | 90
+  milestone: string
+  kpi: string
+  target: string
+}
+
+export interface DataReadiness {
+  source: string
+  status: 'have' | 'likely' | 'missing'
+  reason: string
+}
+
+export interface ComplianceNote {
+  rule_id: string
+  note: string
+  title: string
+  url: string
 }
 
 export interface RankChange {
