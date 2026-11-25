@@ -1,40 +1,60 @@
 # AI Opportunity Pipeline
 
-Give it a company name. Four agent stages research the company, diagnose its challenges with explicit reasoning, map AI opportunities to its real projects and operations, and write a one-page pitch to its CEO. Every run produces a **5-section assessment report**:
+Give it a company name. It reads the company's own filings, investor updates and recent news. Then it diagnoses the business's challenges with explicit reasoning, ranks company-specific AI opportunities, and writes a one-page pitch to the CEO. Every claim carries a numbered, dated citation, and every name and figure in the pitch is checked against the evidence before it's written.
 
-1. **Company Overview**: what they do, industry, scale, geographic presence
-2. **Key Business Information**: offerings and projects, recent developments, expansion plans, public info (RERA, partnerships, financials)
-3. **Potential Business Challenges**: operational, sales and customer experience, each with a `reasoning` field
-4. **AI Opportunities**: ranked by a weighted rubric, each mapped to the challenges it solves and the projects or journey stage it applies to
-5. **Personalized CEO Pitch**: one page covering (a) why we reached out, (b) the opportunities, and (c) the recommended solutions
+![The report: header, cited key figures and a scroll-spied table of contents](docs/screenshots/03-report.png)
 
-Use it from the CLI or from the React web app (see **Web app** below).
+Each run produces a **5-section assessment**:
+1. Company overview
+2. Key business information
+3. Business challenges with reasoning
+4. AI opportunities
+5. A one-page personalized CEO pitch
 
-```bash
-python run_pipeline.py "Business Name" --url business.com
-```
+You can also download a full-report PDF, a one-page pitch PDF, a 10-slide deck and an email draft.
 
-## Setup
+**Docs:**
+- [docs/APPROACH.md](docs/APPROACH.md): architecture, decisions and trade-offs, the token budget, and the problems solved along the way.
+- [docs/AI_USAGE.md](docs/AI_USAGE.md): which AI did what, and where it was wrong.
+- [docs/DESIGN_DIRECTION.md](docs/DESIGN_DIRECTION.md): the interface design.
+
+## Quickstart (2 minutes, no API keys)
+
+Demo mode runs the real app and pipeline with fake model and search calls, so it costs nothing.
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env        # then add your keys
+python scripts/demo_api.py
 ```
 
-PDF exports use Playwright. On a Mac with Google Chrome installed it drives that Chrome and needs nothing else.
-Otherwise install its Chromium once: `playwright install chromium`. (WeasyPrint, then Chrome's own
-`--print-to-pdf`, are tried as fallbacks.)
+In a second terminal:
+
+```bash
+cd frontend && npm install && API_PROXY_TARGET=http://127.0.0.1:8010 npm run dev -- --port 5174
+```
+
+Open http://localhost:5174, type any company name and press **Research**. You'll see the run timeline stream, then the report opens. Try **Export** for the PDF, the deck and the email draft, and **How it works** for the pipeline map.
+
+- **Need:** Python 3.11+ and Node 20+.
+- **PDFs:** they use Playwright with your installed Google Chrome. Without Chrome, run `playwright install chromium` once.
+- **Demo details:** each step takes about 2.5 seconds (`DEMO_DELAY`). A company name containing "fail" stops at stage 3 the first time, so you can try **Resume**. Demo reports go to a temporary folder, never `outputs/`.
+
+## Real runs
+
+```bash
+cp .env.example .env    # then add at least one model key
+```
 
 | Key | Needed? |
 |---|---|
-| `GEMINI_API_KEY` | Yes, for the default provider (`LLM_PROVIDER=gemini`). Get one at Google AI Studio |
-| `GEMINI_MODEL` | Optional, defaults to `gemini-3.8-flash` |
-| `OPENAI_API_KEY` + `OPENAI_MODEL` | Only if `LLM_PROVIDER=openai` |
-| `OPENROUTER_API_KEY` + `OPENROUTER_MODEL` | Only if `LLM_PROVIDER=openrouter`. Free `:free` models work on a free account, with a daily request limit |
-| `TAVILY_API_KEY` | Optional, best search quality |
-| `SERPER_API_KEY` | Optional, used if there's no Tavily key |
-| none | Search falls back to DuckDuckGo automatically |
+| `GEMINI_API_KEY` | For the default provider (`LLM_PROVIDER=gemini`). Get one at Google AI Studio |
+| `OPENROUTER_API_KEY` | For `LLM_PROVIDER=openrouter`. Free `:free` models work on a free account, with a daily request limit; a fallback list switches models when one is busy |
+| `OPENAI_API_KEY` + `OPENAI_MODEL` | For `LLM_PROVIDER=openai` |
+| `TAVILY_API_KEY` / `SERPER_API_KEY` | Optional, better search. **With no search key, DuckDuckGo is used automatically** |
+| `CHEAP_MODEL`, `MAX_DOCS`, `RESEARCH_TIME_BUDGET_S`, `GAP_ROUND`, `WEIGHT_*` | Optional tuning: see `.env.example` |
+
+Web app against the real API: run `uvicorn api.index:app --port 8000`, then in another terminal `cd frontend && npm run dev`, and open http://localhost:5173.
 
 ## Usage
 
@@ -61,89 +81,57 @@ Outputs go to `outputs/<business-slug>/`:
 | `04_verification.json` | Stage 4 verifier: every name, figure and period in the pitch, checked against the evidence |
 | `06_pitch_deck.pptx`, `06_report.pdf`, `06_pitch_onepage.pdf`, `06_outreach.eml` | `--export` (or the web app's Export menu); built from the files above, no LLM calls |
 
-## Web app (FastAPI + React)
+## What a run does
 
-Run the backend and the frontend in two terminals, both from this folder.
+![Live run timeline: per-stage time, sources read, tokens, and the log](docs/screenshots/02-run-timeline.png)
 
-**Terminal 1, the API on port 8000:**
+1. **Research.** It searches (news, investor relations, filings, RERA) and ranks sources, preferring primary ones. It reads up to **6 pages or PDFs**, and a cheap model turns them into **dated facts with IDs**. Python then applies three rules:
+   - the newest source wins;
+   - a leader is named only with evidence from the last 12 months;
+   - figures with no source are removed.
 
-```bash
-source .venv/bin/activate
-uvicorn api.index:app --reload --port 8000
-```
+   CEO quotes are kept only if they appear word for word in the source.
+2. **Challenges.** 5 to 8 operational, sales and customer-experience challenges, each laid out as evidence → reasoning → impact.
+3. **Opportunities and scoring.** 5 to 7 ideas, each with:
+   - build vs buy, using a curated vendor list;
+   - a 30/60/90-day pilot with targets;
+   - data readiness, and compliance notes from a curated list.
 
-**Terminal 2, the React dev server on port 5173.** It proxies `/api` to port 8000.
+   The model scores 5 criteria, including relevance to the CEO's stated priorities. **Python** computes the ranking, discounts ROI built on assumptions, and checks whether the winner holds under conservative assumptions.
+4. **Pitch and verifier.** The pitch opens on the CEO's own verified words. Then every name, figure and period in it is checked against the facts:
+   - former leaders are replaced with their title;
+   - stale figures are flagged;
+   - the pass rate shows on the report.
 
-```bash
-cd frontend
-npm install      # first time only
-npm run dev
-```
+| Ranking table with the practical plan | The A4 pitch preview (identical to the PDF) |
+|---|---|
+| ![Opportunities](docs/screenshots/04-opportunities.png) | ![CEO pitch](docs/screenshots/05-ceo-pitch.png) |
 
-Open http://localhost:5173. **Saved reports** loads any run in `outputs/` without spending API credits. **Run analysis** streams live stage progress.
+| How it works (pipeline map) | Phone | Dark mode |
+|---|---|---|
+| ![How it works](docs/screenshots/06-how-it-works.png) | ![Phone](docs/screenshots/07-phone.png) | ![Dark](docs/screenshots/08-dark.png) |
+
+Screenshots come from demo mode (`python scripts/screenshots.py` regenerates them).
+
+## Web app API
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /api/health` | Provider, model, and whether keys are set (no API call) |
-| `GET /api/examples` | List saved runs in `outputs/`, including partial ones |
-| `GET /api/examples/{slug}` | A saved run as the 5-section JSON + Markdown + pitch text |
-| `GET /api/examples/{slug}/prototype` | The run's HTML prototype |
-| `POST /api/analyze/stream` | `{"company_name", "url"?, "include_prototype"?}` → Server-Sent Events: `stage` / `status` / `note` / `agent_done` / `result` / `error` |
-| `POST /api/analyze` | Same input, with one JSON response at the end |
+| `GET /api/health` | Provider, model, and whether keys are set (no model call) |
+| `GET /api/examples` | Saved runs in `outputs/`, including partial ones |
+| `GET /api/examples/{slug}` | A saved run: the report JSON, Markdown, pitch text and run details |
+| `GET /api/examples/{slug}/export/{pptx,report.pdf,pitch.pdf,pitch.html,email,eml,zip}` | Exports, built from the saved run with no model calls. `email` and `eml` take `?to=`; nothing is ever sent |
+| `POST /api/analyze/stream` | `{"company_name", "url"?, "include_prototype"?}` → Server-Sent Events (`stage`, `status`, `note`, `agent_done`, `result`, `error`) |
 
-API docs are at http://127.0.0.1:8000/docs.
-
-### Demo mode (no API quota)
-
-The real app and pipeline, with fake model and search calls. Use it to try the UI, record a walkthrough, or test the live progress view.
-
-```bash
-python scripts/demo_api.py                                              # demo API on port 8010
-cd frontend && API_PROXY_TARGET=http://127.0.0.1:8010 npm run dev -- --port 5174
-```
-
-Open http://localhost:5174.
-- Each step takes about 2.5 seconds; change it with `DEMO_DELAY`.
-- Stage 3 shows a model-fallback note.
-- A company name containing "fail" stops at stage 3 the first time, so you can try **Resume**.
-- Demo reports go to a temporary folder, never `outputs/`.
-
-## Tests
-
-```bash
-pytest -q tests/                     # offline: pipeline, report, search, API (mocked Gemini + web), free, ~1 second
-cd frontend && npm run build && cd ..  # type-check + production build of the web app
-python tests/smoke_live.py            # live: real Gemini + search, needs GEMINI_API_KEY, costs credits
-python tests/smoke_live.py "Blue Bottle Coffee" --url bluebottlecoffee.com
-```
-
-## How it's built
-
-```
-run_pipeline.py        orchestrator + CLI
-agents/                researcher, strategist, evaluator, builder (+ base.py: context, file names)
-prompts/               system prompts, one .md per LLM call — edit freely
-utils/llm.py           Gemini (google-genai) / OpenAI behind one interface; validation + repair retries
-utils/schemas.py       Pydantic models for every handoff
-utils/search.py        Tavily → Serper → DuckDuckGo chain, homepage scrape, tech detection
-utils/costs.py         token + cost tracking (edit PRICES_PER_MTOK for other models)
-utils/console.py       rich spinners and summary tables
-```
-
-**Design choices**
-- **Structured output:** Gemini calls pass `system_instruction`, `response_mime_type="application/json"` and `response_schema=<PydanticModel>` in `GenerateContentConfig`, and the JSON is validated into the same Pydantic model. OpenAI uses JSON mode plus Pydantic validation. Either way, an invalid or rule-breaking response is sent back to the model with the exact error, up to `MAX_VALIDATION_RETRIES` times.
-- **Deterministic decisions:** the LLM scores each criterion from 1 to 10. Python computes the weighted totals, picks the winner, and does all the ROI math (totals, payback, 3-year ROI). Change the rubric weights in `.env`.
-- **Search without a Tavily key:** DuckDuckGo uses an 8-second request timeout and one quick retry, runs at most 4 queries, and a provider that fails twice in a row is skipped for the rest of the run. Research also stops issuing queries after 75 seconds and continues with what it has.
-- **Thin data:** if search returns little and the homepage is unreachable, the profile is forced to `data_quality: "low"`, inferences go into `assumptions`, and the pitch adds an "illustrative figures" caveat.
-- **Resilience:** the google-genai client retries 408/429/5xx errors with backoff, tenacity adds retries around each call (including the streamed prototype), and a failed search provider falls through to the next one. Completed steps stay on disk, so `--from-step` resumes.
-- **Safety blocks:** if Gemini blocks a prompt or stops a response for safety reasons, the run stops with a clear message instead of retrying.
-- **Thinking:** `LLM_EFFORT` and `BUILDER_EFFORT` map to Gemini thinking levels (`minimal` → `MINIMAL` … `xhigh`/`max` → `XHIGH`). If a model doesn't accept a thinking level, the client drops it and retries automatically.
-- **Models:** `GEMINI_MODEL` (default `gemini-3.8-flash`) runs every agent. Set `GEMINI_BUILDER_MODEL` to use a different model for Agent 4, e.g. `gemini-3.5-flash-lite` for a faster, cheaper run.
-- **Cost:** token counts are always tracked, with thinking tokens counted as output. Dollar costs show as "n/a" until you set `PRICE_INPUT_PER_MTOK` / `PRICE_OUTPUT_PER_MTOK` in `.env` or add your model to `PRICES_PER_MTOK` in `utils/costs.py`.
+Interactive API docs: http://127.0.0.1:8000/docs.
 
 ## Evaluation results
 
-Generated by `python scripts/eval.py`.
+`python scripts/eval.py` scores saved runs, and `--judge` adds one cheap-model call per report. It reports:
+- how similar each company's AI ideas are to every other company's (lower is more specific);
+- the judge's scores on the assessment's reasoning, research and practicality criteria;
+- the verifier pass rate;
+- **tokens, calls and time per run**.
 
 <!-- eval:start -->
 | Company | Run | Similarity ↓ | Judge (0-100) | Reasoning | Research | Practicality | Specificity | Verified | Citations | Tokens in / out | Calls | Time |
@@ -157,3 +145,22 @@ Generated by `python scripts/eval.py`.
 - **legacy** runs were saved before the Phase 1-6 upgrade: no per-stage tokens, verifier or citations.
 - Skipped: adani-realty: HandoffError; blue-bottle-coffee: no AI opportunities yet
 <!-- eval:end -->
+
+**Status:** the table above only has the two runs saved before the upgrade ("legacy"). Fresh live runs for Adani Realty, Sobha, Prestige, Brigade, Puravankara and Shivalik, about 12 calls each, are the next step. They'll fill in the verifier, citations and per-stage token columns.
+
+## Tests
+
+```bash
+pytest -q tests/                       # 180+ offline tests: fixtures and fakes, no keys, about 15 seconds
+cd frontend && npm run build           # type-check and production build
+python tests/smoke_live.py             # live smoke test: real model + search, needs a key, uses quota
+```
+
+## With more time
+
+- **Fresh live runs and the judged eval table** for the six companies. Then compare the judge against a human rating on a few reports, to check it agrees.
+- **A better source list for India.** BSE/NSE filings via official APIs rather than search, and the RERA registry pages per state, so financials and project registrations come from primary records every time.
+- **Embeddings for the "is this specific?" metric.** The eval currently uses TF-IDF by default; Gemini embeddings are wired in but unmeasured.
+- **Human review in the loop.** Let a user mark a fact as wrong in the Trace panel, and re-run only the affected stages.
+- **Broader curated lists.** More vendor categories and compliance regimes (GDPR, UAE PDPL), each still with official links.
+- **Hosting.** A small deployment with a queue for runs and per-user saved reports; today it's a local app.
