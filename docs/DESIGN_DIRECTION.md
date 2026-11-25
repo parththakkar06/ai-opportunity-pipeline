@@ -225,3 +225,13 @@ Each component below replaces one or more existing files. It reuses the logic bu
 2. **Self-hosted Newsreader and Inter**, rather than Google Fonts.
 3. **Remove framer-motion** in favour of CSS transitions.
 4. **The pitch preview is the real export HTML** in an iframe, rather than a React re-creation of it.
+
+## 11. As built (deviations from this proposal)
+
+- **shadcn structure.** Base components live in `frontend/src/components/ui/` (button, badge, card, menu) with the `@/` alias and `cn()` helper, so shadcn components can be dropped in. Because shadcn's `accent` means a hover surface, the brand colour token is named `brand` (`--color-brand`), not `accent`.
+- **Brand clamping in sRGB.** The accent is darkened (light theme) or lightened (dark theme) in sRGB steps rather than OKLCH until it reaches 4.5:1. It's the same rule in Python (`utils/export/data.py`) and TypeScript (`lib/brand.ts`). Near-grey colours fall back to ink blue.
+- **Pitch preview via `srcdoc`.** The page is fetched from `…/export/pitch.html` and shown in a fully sandboxed `srcdoc` frame. The embedded browser blocked navigating a frame to it. The HTML is the variant the PDF actually prints (full or short), cached in `06_pitch_preview.html`.
+- **Key metrics come from Python.** `report.key_metrics` holds only figures backed by current, dated facts, with long values compacted ("FY25 revenue ~$9M (estimated)" becomes "~$9M", labelled "Revenue, FY25").
+- **Radial orbital timeline.** The user-supplied component is restyled to this direction (no gradients, glows or perpetual rotation; keyboard-operable; a list below 520px) and used on the "How it works" page to map the pipeline.
+- **Challenge filter** is local state rather than `?cat=`, since the page is now one document.
+- **Dev-only worst-case toggle** (`?data=worst|empty|one`) for the break-ui review. It's never in production builds.
