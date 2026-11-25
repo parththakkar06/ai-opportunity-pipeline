@@ -13,29 +13,27 @@ The design rule behind everything below: **the language model reads and writes; 
 ## 1. Pipeline
 
 ```mermaid
-flowchart LR
+flowchart TB
     U([Company name<br/>+ optional website]) --> S1
 
     subgraph S1[Stage 1 · Research]
         direction TB
-        Q[Templated queries<br/>news · investor · filings · RERA] --> SR[Search chain<br/>Tavily → Serper → DuckDuckGo]
-        SR --> RK[Rank sources<br/>filing &gt; investor &gt; RERA &gt; news]
-        RK --> FT[Read ≤ 6 pages / PDFs<br/>httpx + pypdf, Tavily extract fallback]
-        FT --> FX[Cheap model: dated facts<br/>+ verbatim CEO quotes<br/>3 docs per call]
-        FX --> PV[Python provenance<br/>newest wins · 12-month leaders<br/>unsupported figures removed]
-        PV --> GAP{Gaps and<br/>quality ≠ high?}
-        GAP -- yes, once --> Q
+        SR[Search and rank sources<br/>Tavily → Serper → DuckDuckGo<br/>filings and investor pages first] --> FT[Read up to 6 pages and PDFs]
+        FT --> FX[Cheap model: dated facts<br/>and verbatim CEO quotes]
+        FX --> PV[Python provenance rules<br/>newest wins · 12-month leaders<br/>unsupported figures removed]
+        PV --> GAP{Gaps and<br/>quality not high?}
+        GAP -- yes, once --> SR
     end
 
-    S1 --> P1[(01_business_profile.json<br/>facts · sources · stated priorities)]
+    S1 --> P1[(Business profile<br/>facts · sources · priorities)]
     P1 --> S2[Stage 2 · Challenges<br/>evidence → reasoning → impact]
-    S2 --> S3a[Stage 3 · Opportunities<br/>curated vendors + compliance]
-    S3a --> S3b[Stage 3 · Scoring<br/>model scores 5 criteria<br/>Python weights, ROI discount,<br/>sensitivity re-rank]
-    S3b --> S4[Stage 4 · Pitch<br/>opens on CEO's verified words]
-    S4 --> V[Verifier<br/>Python + ≤ 1 cheap call]
-    V --> R[(05_assessment_report.json<br/>citations · trace · key metrics)]
-    R --> X[Exports<br/>PDF · deck · email · zip<br/>no LLM]
-    R --> W[Web app<br/>FastAPI SSE + React]
+    S2 --> S3a[Stage 3 · Opportunities<br/>curated vendors and compliance]
+    S3a --> S3b[Stage 3 · Scoring<br/>model scores, Python ranks<br/>ROI discount and stress test]
+    S3b --> S4[Stage 4 · Pitch<br/>opens on a verified CEO quote]
+    S4 --> V[Verifier<br/>Python plus at most one cheap call]
+    V --> R[(Assessment report<br/>citations · trace · key figures)]
+    R --> X[Exports: PDF, deck,<br/>email, zip. No model]
+    R --> W[Web app]
 ```
 
 | Stage | Model calls | Python does |
@@ -98,7 +96,7 @@ The disk cache lives at `outputs/<slug>/cache/`, with one JSON file per search q
 
 Tokens, calls and seconds are logged per stage in `00_run_meta.json` and shown in the web app's Run details popover.
 
-Before this upgrade, a run used about **54k input / 52k output tokens in 7–8 calls** and saw only search snippets; that's the legacy Sobha and Shivalik runs in the eval table. The offline fixture run of the new pipeline makes 11 structured calls. Token figures for live runs of the new pipeline come from `scripts/eval.py` once fresh runs exist; see the README.
+Measured on the three current live runs (`docs/eval_results.md`): **7 to 9 model calls and about 70–89k input / 64–78k output tokens per run**, in roughly 6 to 18 minutes on free models. That is more tokens than the pipeline before this upgrade (about 54k input / 50k output in 7–8 calls, from the two legacy runs), because the new research stage reads whole documents instead of search snippets. The extra tokens buy dated, cited facts; the cheap model and the caps above keep the cost of that bounded. The offline fixture run makes 11 structured calls.
 
 ## 4. Key decisions and trade-offs
 
