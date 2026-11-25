@@ -3,6 +3,7 @@ import { useId, useRef, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { isValidWebsite, normalizeWebsite, relativeTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { STATIC } from '@/lib/static'
 import type { SavedRun } from '@/types'
 
 export const EXAMPLE_COMPANIES = [
@@ -58,6 +59,51 @@ export function Intake({
 
   const input =
     'w-full rounded-md border bg-sheet px-3.5 text-ink placeholder:text-ink-3 focus-visible:border-brand focus-visible:outline-none disabled:opacity-60'
+
+  if (STATIC) {
+    // Read-only snapshot: no form, since there's no backend to run research.
+    return (
+      <div className="mx-auto max-w-[36rem] px-4 pt-[12vh] pb-24 sm:px-0">
+        <h1 className="display text-[2.5rem] text-ink sm:text-[2.75rem]">AI opportunity reports</h1>
+        <p className="prose-serif mt-3 text-ink-2">
+          Finished, cited reports: what each company does, its challenges, ranked AI opportunities and a one-page pitch
+          to its CEO. This is a read-only snapshot, so new companies can’t be researched here.
+        </p>
+        <section aria-labelledby="saved-heading" className="mt-10 border-t border-rule pt-6">
+          <h2 id="saved-heading" className="heading text-xl text-ink">
+            Reports
+          </h2>
+          {runsLoading ? (
+            <p className="meta mt-3">Loading…</p>
+          ) : runs.length === 0 ? (
+            <p className="meta mt-3">No reports have been published yet.</p>
+          ) : (
+            <ul className="mt-2 divide-y divide-rule">
+              {runs.map((r) => (
+                <li key={r.slug} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-2.5">
+                  <button
+                    type="button"
+                    onClick={() => onOpenRun(r.slug)}
+                    className="text-left text-[15px] font-medium text-ink underline-offset-4 hover:underline"
+                  >
+                    {r.business_name}
+                  </button>
+                  <span className="meta num">
+                    {relativeTime(r.generated_at)} · {QUALITY[r.data_quality] ?? r.data_quality}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+        <p className="mt-8 text-sm text-ink-3">
+          <button type="button" onClick={onHowItWorks} className="text-brand underline decoration-brand/40 underline-offset-4">
+            How it works
+          </button>
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto max-w-[36rem] px-4 pt-[12vh] pb-24 sm:px-0">

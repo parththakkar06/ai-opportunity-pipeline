@@ -3,6 +3,7 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'rea
 
 import { Button } from '@/components/ui/button'
 import { compact, relativeTime } from '@/lib/format'
+import { STATIC } from '@/lib/static'
 import { cn } from '@/lib/utils'
 import type { Health, RunMeta, SavedRun } from '@/types'
 
@@ -97,7 +98,7 @@ function CommandBar({
     () => (q ? runs.filter((r) => r.business_name.toLowerCase().includes(q) || r.slug.includes(q)).slice(0, 6) : []),
     [runs, q],
   )
-  const options = [...matches.map((r) => ({ kind: 'open' as const, run: r })), ...(q ? [{ kind: 'new' as const }] : [])]
+  const options = [...matches.map((r) => ({ kind: 'open' as const, run: r })), ...(q && !STATIC ? [{ kind: 'new' as const }] : [])]
 
   const choose = (i: number) => {
     const opt = options[i]
@@ -117,14 +118,14 @@ function CommandBar({
           ref={inputRef}
           type="text"
           role="combobox"
-          aria-label="Research another company or open a saved report"
+          aria-label={STATIC ? 'Open a report' : 'Research another company or open a saved report'}
           aria-expanded={open && options.length > 0}
           aria-controls={listId}
           aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
           aria-autocomplete="list"
           autoComplete="off"
           spellCheck={false}
-          placeholder="Research another company…"
+          placeholder={STATIC ? 'Open a report…' : 'Research another company…'}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value)

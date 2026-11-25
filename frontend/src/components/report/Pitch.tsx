@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button'
 import type { ReportPayload } from '@/types'
 
 import { TracePanel } from './Citations'
-import { ExportMenu, exportBase } from './ExportMenu'
+import { exportUrl } from '@/lib/static'
+
+import { ExportMenu } from './ExportMenu'
 
 const A4 = { width: 794, height: 1123 } // CSS pixels at 96 dpi
 
@@ -26,7 +28,7 @@ export function Pitch({ payload, onEmail }: { payload: ReportPayload; onEmail: (
   }, [])
 
   // The page is fetched and shown through srcdoc in a fully sandboxed frame: no scripts, no navigation.
-  const src = `${exportBase(r.slug)}/pitch.html?v=${encodeURIComponent(r.generated_at ?? '')}`
+  const src = `${exportUrl(r.slug, 'pitch.html')}?v=${encodeURIComponent(r.generated_at ?? '')}`
   useEffect(() => {
     if (!p) return
     const ctrl = new AbortController()
@@ -44,7 +46,7 @@ export function Pitch({ payload, onEmail }: { payload: ReportPayload; onEmail: (
     <div>
       <div className="no-print mb-5 flex flex-wrap items-center gap-2">
         <Button asChild size="sm">
-          <a href={`${exportBase(r.slug)}/pitch.pdf`} download>
+          <a href={exportUrl(r.slug, 'pitch.pdf')} download>
             Download PDF
           </a>
         </Button>

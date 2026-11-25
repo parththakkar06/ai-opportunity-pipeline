@@ -4,10 +4,11 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { useToast } from '@/components/shell/Toast'
 import { Button } from '@/components/ui/button'
 import { Menu, MenuItem, MenuSeparator } from '@/components/ui/menu'
+import { STATIC, exportUrl } from '@/lib/static'
+import { gmailUrl, mailtoUrl } from '@/lib/mail'
 import type { ReportPayload } from '@/types'
 
 // Every file is built on the server from the saved run (api/exports.py); nothing here calls a model.
-export const exportBase = (slug: string) => `/api/examples/${encodeURIComponent(slug)}/export`
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -41,7 +42,6 @@ export function ExportMenu({
 }) {
   const { notify } = useToast()
   const r = payload.report
-  const base = exportBase(r.slug)
   const hasPitch = !!r.ceo_pitch
   return (
     <Menu
@@ -66,23 +66,23 @@ export function ExportMenu({
               >
                 Copy pitch text
               </MenuItem>
-              <MenuItem href={`${base}/pitch.pdf`} external onSelect={close} hint="Opens the PDF; print from there">
+              <MenuItem href={exportUrl(r.slug, 'pitch.pdf')} external onSelect={close} hint="Opens the PDF; print from there">
                 Print pitch
               </MenuItem>
               <MenuItem onSelect={() => { close(); onEmail() }} hint="Gmail, Mail app or .eml. Never sent.">
                 Email draft…
               </MenuItem>
               <MenuSeparator />
-              <MenuItem href={`${base}/pitch.pdf`} download onSelect={close} hint="PDF, exactly 1 page">
+              <MenuItem href={exportUrl(r.slug, 'pitch.pdf')} download onSelect={close} hint="PDF, exactly 1 page">
                 One-page pitch
               </MenuItem>
             </>
           )}
-          <MenuItem href={`${base}/report.pdf`} download onSelect={close} hint="PDF with numbered sources">
+          <MenuItem href={exportUrl(r.slug, 'report.pdf')} download onSelect={close} hint="PDF with numbered sources">
             Full report
           </MenuItem>
           {hasPitch && (
-            <MenuItem href={`${base}/pptx`} download onSelect={close} hint="PowerPoint, 10 slides">
+            <MenuItem href={exportUrl(r.slug, 'pptx')} download onSelect={close} hint="PowerPoint, 10 slides">
               Pitch deck
             </MenuItem>
           )}
@@ -90,7 +90,7 @@ export function ExportMenu({
             Report text
           </MenuItem>
           {hasPitch && (
-            <MenuItem href={`${base}/zip`} download onSelect={close} hint="ZIP of all files">
+            <MenuItem href={exportUrl(r.slug, 'zip')} download onSelect={close} hint="ZIP of all files">
               Download all
             </MenuItem>
           )}
@@ -114,7 +114,17 @@ export function EmailSheet({ slug, onClose }: { slug: string; onClose: () => voi
   const toRef = useRef<HTMLInputElement>(null)
   const sheetRef = useRef<HTMLDivElement>(null)
   const returnFocus = useRef<HTMLElement | null>(document.activeElement as HTMLElement | null)
-  const base = exportBase(slug)
+  const emailUrl = exportUrl(slug, 'email')
+
+  // In the static snapshot the links are built here from the typed recipient; the live server sends them.
+  const view: EmailDraft | null = draft && STATIC
+    ? {
+        ...draft,
+        gmail_url: gmailUrl(draft.subject, draft.body, to),
+        mailto_url: mailtoUrl(draft.subject, draft.body, to).url,
+        mailto_shortened: mailtoUrl(draft.subject, draft.body, to).cut,
+      }
+    : draft
 
   const close = () => {
     setClosing(true)
@@ -135,21 +145,22 @@ export function EmailSheet({ slug, onClose }: { slug: string; onClose: () => voi
 
   useEffect(() => {
     const ctrl = new AbortController()
+    // Live app: the server builds the links for the typed recipient. Static snapshot: one file, links built below.
     const t = window.setTimeout(async () => {
       try {
-        const res = await fetch(`${base}/email?to=${encodeURIComponent(to)}`, { signal: ctrl.signal })
-        if (!res.ok) throw new Error((await res.json()).detail ?? res.statusText)
+        const res = await fetch(STATIC ? emailUrl : `${emailUrl}?to=${encodeURIComponent(to)}`, { signal: ctrl.signal })
+        if (!res.ok) throw new Error(STATIC ? res.statusText : ((await res.json()).detail ?? res.statusText))
         setDraft(await res.json())
         setError(null)
       } catch (e) {
         if (!ctrl.signal.aborted) setError(e instanceof Error ? e.message : 'Couldn’t load the email draft.')
       }
-    }, 250)
+    }, STATIC ? 0 : 250)
     return () => {
       ctrl.abort()
       window.clearTimeout(t)
     }
-  }, [base, to])
+  }, [emailUrl, STATIC ? '' : to])
 
   // Keep Tab inside the sheet while it's open.
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -212,32 +223,32 @@ export function EmailSheet({ slug, onClose }: { slug: string; onClose: () => voi
             className="mt-1 h-10 w-full rounded-md border border-rule-strong bg-sheet px-3 text-[15px] text-ink placeholder:text-ink-3 focus-visible:border-brand focus-visible:outline-none"
           />
           {error && <p className="mt-3 text-sm text-negative">{error}</p>}
-          {draft && (
+          {view && (
             <>
               <p className="mt-5 text-sm text-ink-3">Subject</p>
-              <p className="text-[15px] font-medium text-ink">{draft.subject}</p>
+              <p className="text-[15px] font-medium text-ink">{view.subject}</p>
               <p className="mt-4 text-sm text-ink-3">Message</p>
-              <p className="prose-serif mt-1 text-[15px] whitespace-pre-line text-ink">{draft.body}</p>
+              <p className="prose-serif mt-1 text-[15px] whitespace-pre-line text-ink">{view.body}</p>
               <p className="meta num mt-2">
-                {draft.words} words · the one-page PDF is attached in the .eml
-                {draft.mailto_shortened ? ' · shortened for the Mail app link' : ''}
+                {view.words} words · the one-page PDF is attached in the .eml
+                {view.mailto_shortened ? ' · shortened for the Mail app link' : ''}
               </p>
             </>
           )}
         </div>
-        {draft && (
+        {view && (
           <div className="flex flex-wrap gap-2 border-t border-rule p-5">
-            <a href={draft.gmail_url} target="_blank" rel="noreferrer noopener" className={link}>
+            <a href={view.gmail_url} target="_blank" rel="noreferrer noopener" className={link}>
               <ExternalLink className="size-4" strokeWidth={1.5} aria-hidden="true" />
               Open in Gmail<span className="sr-only"> (opens in a new tab)</span>
             </a>
-            <a href={draft.mailto_url} className={link}>
+            <a href={view.mailto_url} className={link}>
               Open in Mail app
             </a>
             <Button
               variant="outline"
               onClick={async () => {
-                if (await copyText(`Subject: ${draft.subject}\n\n${draft.body}`)) {
+                if (await copyText(`Subject: ${view.subject}\n\n${view.body}`)) {
                   setCopied(true)
                   window.setTimeout(() => setCopied(false), 1800)
                 } else notify({ tone: 'error', title: "Couldn't copy", description: 'Your browser blocked clipboard access.' })
@@ -246,9 +257,9 @@ export function EmailSheet({ slug, onClose }: { slug: string; onClose: () => voi
               {copied ? <Check strokeWidth={1.5} aria-hidden="true" /> : <Copy strokeWidth={1.5} aria-hidden="true" />}
               {copied ? 'Copied' : 'Copy'}
             </Button>
-            <a href={`${base}/eml?to=${encodeURIComponent(to)}`} download className={link}>
+            <a href={STATIC ? exportUrl(slug, 'eml') : `${exportUrl(slug, 'eml')}?to=${encodeURIComponent(to)}`} download className={link}>
               <Download className="size-4" strokeWidth={1.5} aria-hidden="true" />
-              .eml with PDF
+              {STATIC ? '.eml with PDF (no recipient)' : '.eml with PDF'}
             </a>
           </div>
         )}

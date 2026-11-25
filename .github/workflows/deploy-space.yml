@@ -55,7 +55,7 @@ jobs:
           mkdir /tmp/space
           rsync -a ./ /tmp/space/ \
             --exclude .git --exclude .github --exclude docs --exclude tests --exclude design-system \
-            --exclude outputs --exclude .cache --exclude frontend/node_modules --exclude frontend/dist
+            --exclude outputs --exclude .cache --exclude frontend/node_modules --exclude frontend/dist --exclude frontend/public/data
           mkdir -p /tmp/space/outputs && touch /tmp/space/outputs/.gitkeep
           {
             printf -- '---\ntitle: AI Opportunity Studio\nsdk: docker\napp_port: 7860\npinned: false\n---\n\n'
