@@ -4,6 +4,7 @@ import { fadeRise } from '../lib/motion'
 import type { ReportTab } from '../lib/useUrlState'
 import type { ReportPayload } from '../types'
 import { ChallengesSection } from './report/ChallengesSection'
+import { CitationProvider } from './report/Citations'
 import { CeoPitchSection } from './report/CeoPitchSection'
 import { KeyInfoSection } from './report/KeyInfoSection'
 import { OpportunitiesSection } from './report/OpportunitiesSection'
@@ -134,6 +135,7 @@ export function ReportView({
           exit="exit"
           className="rounded-2xl focus-visible:outline-offset-4"
         >
+          <CitationProvider report={report}>
           {tab === 'overview' && <OverviewSection report={report} entrance={entrance} />}
           {tab === 'key-info' && <KeyInfoSection report={report} entrance={entrance} />}
           {tab === 'challenges' && <ChallengesSection report={report} entrance={entrance} highlightId={highlight} />}
@@ -151,6 +153,7 @@ export function ReportView({
               onIncludeKitChange={setPrintKit}
             />
           )}
+          </CitationProvider>
         </m.div>
       </AnimatePresence>
     </div>

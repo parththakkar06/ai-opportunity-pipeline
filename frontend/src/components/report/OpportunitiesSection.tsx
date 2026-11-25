@@ -1,4 +1,5 @@
 import { m } from 'framer-motion'
+import { Cite } from './Citations'
 import type { ReactNode } from 'react'
 import { duration, ease } from '../../lib/motion'
 import type { AssessmentReport, ReportOpportunity, RubricScore } from '../../types'
@@ -59,6 +60,7 @@ export function OpportunitiesSection({
               </Badge>
               <h2 id="recommended-title" className="mt-2 text-2xl font-bold text-foreground">
                 {recommended.title}
+                <Cite id={recommended.id} />
               </h2>
               <p className="mt-1 text-base text-muted-foreground">{prettyCategory(recommended.category)}</p>
             </div>
@@ -153,6 +155,7 @@ function OpportunityCard({
           </p>
           <h3 id={`opp-${o.id}`} className="mt-1 text-xl font-semibold text-foreground">
             {o.title}
+            <Cite id={o.id} />
           </h3>
         </div>
         <Score value={o.weighted_score} />

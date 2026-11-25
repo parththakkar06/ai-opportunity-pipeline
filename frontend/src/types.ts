@@ -211,6 +211,30 @@ export interface CEOPitch {
   elevator_pitch: string
 }
 
+export interface Citation {
+  n: number
+  source_id: string
+  url: string
+  title: string
+  date: string | null
+  source_type: string
+}
+
+export interface TraceNode {
+  id: string
+  kind: 'fact' | 'challenge' | 'opportunity' | 'pitch'
+  label: string
+  field: string
+  facts: string[]
+  citations: number[]
+}
+
+export interface Trace {
+  nodes: TraceNode[]
+  edges: { source: string; target: string }[]
+  uncited: string[]
+}
+
 export interface AssessmentReport {
   business_name: string
   slug: string
@@ -225,6 +249,8 @@ export interface AssessmentReport {
   ceo_pitch: CEOPitch | null
   verification?: VerificationReport | null
   sensitivity?: Sensitivity | null
+  citations?: Citation[]
+  trace?: Trace | null
   prototype_available: boolean
   assumptions: string[]
   sources: string[]

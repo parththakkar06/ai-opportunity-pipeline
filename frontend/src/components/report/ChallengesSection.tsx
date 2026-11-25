@@ -1,6 +1,7 @@
 import { AnimatePresence, m } from 'framer-motion'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { duration, ease } from '../../lib/motion'
+import { Cite } from './Citations'
 import type { AssessmentReport, BusinessChallenge, ChallengeCategory } from '../../types'
 import { Card, cx } from '../ui'
 import { CATEGORY, ConfidenceBadge, RevealGroup, Reveal, SeverityBadge } from './primitives'
@@ -170,6 +171,7 @@ function ChallengeCard({ c, highlighted }: { c: BusinessChallenge; highlighted: 
           </p>
           <h2 id={`${challengeAnchor(c.id)}-title`} className="mt-1 text-xl font-semibold text-foreground">
             {c.title}
+            <Cite id={c.id} />
           </h2>
         </div>
         <div className="flex flex-wrap gap-1.5">

@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from 'react'
+import { Cite, TracePanel } from './Citations'
 import type { AssessmentReport } from '../../types'
 import { Button, Card, CheckIcon, CopyIcon, PrinterIcon } from '../ui'
 import { EmptyNote, Reveal, RevealGroup } from './primitives'
@@ -16,6 +17,7 @@ interface Props {
 export function CeoPitchSection({ report, entrance, onPrint, onCopy, copied, includeKit, onIncludeKitChange }: Props) {
   const kitId = useId()
   const p = report.ceo_pitch
+  const whyLines = (report.trace?.nodes ?? []).filter((n) => n.field === 'why_we_reached_out')
   if (!p)
     return (
       <Card className="p-6">
@@ -78,13 +80,21 @@ export function CeoPitchSection({ report, entrance, onPrint, onCopy, copied, inc
           <PitchBlock letter="A" title="Why we reached out">
             {p.opening ? (
               <p className="mb-3 text-base leading-relaxed text-foreground">
-                {p.opening.text}{' '}
-                <span className="font-mono text-xs text-muted-foreground" title="Source id in the research evidence">
-                  [{p.opening.source_id}]
-                </span>
+                {p.opening.text}
+                <Cite id="pitch-opening" />
               </p>
             ) : null}
-            <p className="text-base leading-relaxed text-secondary">{p.why_we_reached_out}</p>
+            <p className="text-base leading-relaxed text-secondary">
+              {whyLines.length
+                ? whyLines.map((n, i) => (
+                    <span key={n.id}>
+                      {i > 0 && ' '}
+                      {n.label}
+                      <Cite id={n.id} />
+                    </span>
+                  ))
+                : p.why_we_reached_out}
+            </p>
             {!p.ceo_statements_found ? (
               <p className="mt-3 text-sm text-muted-foreground italic">
                 No CEO statements found in the sources read
@@ -95,11 +105,12 @@ export function CeoPitchSection({ report, entrance, onPrint, onCopy, copied, inc
 
           <PitchBlock letter="B" title="Opportunities we identified">
             <ul className="space-y-3">
-              {p.opportunities_identified.map((o) => (
+              {p.opportunities_identified.map((o, i) => (
                 <li key={o.title} className="flex gap-3 text-base text-secondary">
                   <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
                   <span>
                     <span className="font-semibold text-foreground">{o.title}.</span> {o.evidence}
+                    <Cite id={`pitch-opp-${i + 1}`} />
                   </span>
                 </li>
               ))}
@@ -147,6 +158,10 @@ export function CeoPitchSection({ report, entrance, onPrint, onCopy, copied, inc
               ` · ${new Date(report.generated_at).toLocaleDateString(undefined, { dateStyle: 'long' })}`}
           </p>
         </article>
+      </Reveal>
+
+      <Reveal>
+        <TracePanel report={report} />
       </Reveal>
 
       <div className="print-kit mx-auto grid max-w-[46rem] gap-5 md:grid-cols-2">
