@@ -17,6 +17,7 @@ You can also download a full-report PDF, a one-page pitch PDF, a 10-slide deck a
 - [docs/APPROACH.md](docs/APPROACH.md): architecture, decisions and trade-offs, the token budget, and the problems solved along the way.
 - [docs/AI_USAGE.md](docs/AI_USAGE.md): which AI did what, and where it was wrong.
 - [docs/DESIGN_DIRECTION.md](docs/DESIGN_DIRECTION.md): the interface design.
+- [docs/DEPLOY.md](docs/DEPLOY.md): putting it online for your team, free.
 
 ## Quickstart (2 minutes, no API keys)
 
@@ -112,6 +113,11 @@ Outputs go to `outputs/<business-slug>/`:
 | ![How it works](docs/screenshots/06-how-it-works.png) | ![Phone](docs/screenshots/07-phone.png) | ![Dark](docs/screenshots/08-dark.png) |
 
 Screenshots come from demo mode (`python scripts/screenshots.py` regenerates them).
+
+## Deploy for your team (free)
+
+A private Hugging Face Space runs the same app at one URL that only your team can open, redeployed from GitHub on every
+push to `main`, with finished reports saved to a private Dataset. Step-by-step: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Web app API
 

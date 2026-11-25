@@ -1,0 +1,2 @@
+# Extra packages for the Hugging Face Space image only (saving reports to a private Dataset).
+huggingface_hub>=0.24

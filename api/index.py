@@ -41,13 +41,15 @@ from run_pipeline import PipelineError, run_pipeline  # noqa: E402
 from utils.config import DEFAULT_OUTPUTS_DIR, ConfigError, load_settings  # noqa: E402
 from utils.console import PipelineUI  # noqa: E402
 from utils.costs import AgentTotals, fmt_cost  # noqa: E402
+from utils import persist  # noqa: E402
 from utils.io import HandoffError, slugify  # noqa: E402
 from utils.llm import LLMError  # noqa: E402
 
 app = FastAPI(title="AI Opportunity Pipeline API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173",
+                   *[o for o in os.getenv("CORS_ORIGINS", "").split(",") if o]],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
@@ -278,6 +280,7 @@ def _release(slug: str) -> None:
 def _execute(req: AnalyzeRequest, ui: PipelineUI) -> dict[str, Any]:
     result = RUNNER(req.company_name, url=req.url, context=req.context, ui=ui,
                     build_prototype=req.include_prototype, from_step=req.from_stage, slug=req.run_slug)
+    persist.save_run(result.out_dir)   # no-op unless REPORTS_DATASET and HF_TOKEN are set (Hugging Face Space)
     payload = report_payload(result.out_dir)
     total = result.tracker.total()
     stages = sorted({r.stage for r in result.tracker.records if r.stage is not None})
@@ -345,3 +348,25 @@ def analyze(req: AnalyzeRequest) -> dict[str, Any]:
         raise HTTPException(status, _error_message(exc)) from exc
     finally:
         _release(slug)
+
+
+
+# --------------------------------------------------------------------------- production: one URL
+# In the Docker image (Hugging Face Space) the built React app is served from this same process, so
+# /api and the UI share an origin. In local development there is no frontend/dist and nothing changes.
+def _mount_frontend() -> None:
+    from fastapi.staticfiles import StaticFiles
+
+    dist = Path(os.getenv("FRONTEND_DIST", str(ROOT / "frontend" / "dist")))
+    if dist.is_dir() and (dist / "index.html").exists():
+        app.mount("/", StaticFiles(directory=dist, html=True), name="frontend")
+
+
+@app.on_event("startup")
+def _restore_saved_reports() -> None:
+    restored = persist.restore(outputs_root())
+    if restored:
+        print(f"Restored {restored} saved report folder(s) from {os.getenv('REPORTS_DATASET')}")
+
+
+_mount_frontend()
